@@ -75,7 +75,7 @@ export default function AdminShareholders() {
       // Update existing
       setShareholders(shareholders.map(s => 
         s.id === editingId 
-          ? { ...s, ...formData, tier: getTierByShare(formData.share_percent) }
+          ? { ...s, ...formData, tier: getTierByShare(formData.share_percent) as Shareholder['tier'] }
           : s
       ));
     } else {
@@ -86,7 +86,7 @@ export default function AdminShareholders() {
         id: newId,
         member_no: memberNo,
         ...formData,
-        tier: getTierByShare(formData.share_percent),
+        tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
         weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
         referral_code: generateReferralCode(memberNo),
       };
