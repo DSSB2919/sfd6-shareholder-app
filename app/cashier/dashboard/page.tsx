@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct } from '@/lib/utils';
 import { uploadReceipt, createRedemption, type Redemption } from '@/lib/supabase';
+import { decodeQRToken, validateQRToken, type QRToken } from '@/lib/qr-code';
 
 interface ScannedData {
   type: 'self' | 'family';
@@ -35,20 +36,45 @@ export default function CashierDashboard() {
   const [alcoholInput, setAlcoholInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Mock scan function
+  // Mock scan function - in production, this would use a QR scanner
   const handleScan = () => {
     setScanning(true);
     // Simulate scanning delay
     setTimeout(() => {
-      setScannedData({
+      // For demo, create a mock QR token
+      const mockToken: QRToken = {
+        shareholderId: 1,
+        shareholderName: 'MR. LEE WEN CHUIN',
+        memberNo: 'SFD6-FP-001',
         type: 'self',
+        timestamp: Date.now(),
+        expiryMinutes: 5,
+        signature: 'mock-signature',
+      };
+      
+      // Validate the token
+      const validation = validateQRToken(mockToken);
+      
+      if (!validation.valid) {
+        alert('二维码无效或已过期: ' + validation.error);
+        setScanning(false);
+        return;
+      }
+      
+      setScannedData({
+        type: mockToken.type,
         shareholder: {
-          id: 1,
-          name: 'MR. LEE WEN CHUIN',
-          member_no: 'SFD6-FP-001',
+          id: mockToken.shareholderId,
+          name: mockToken.shareholderName,
+          member_no: mockToken.memberNo,
           tier: 'Founding Partner',
           points_balance: 185000,
         },
+        family_card: mockToken.familyCardId ? {
+          id: mockToken.familyCardId,
+          name: mockToken.familyName || '',
+          relationship: mockToken.relationship || 'child',
+        } : undefined,
       });
       setScanning(false);
     }, 2000);

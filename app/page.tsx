@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { StatCard } from '@/components/StatCard';
 import { Icon } from '@/components/Icon';
+import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { BENEFITS, TIERS, ACTIVITY_REWARDS } from '@/types';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward } from '@/lib/utils';
 
@@ -23,7 +24,7 @@ const shareholder = {
   referral_code: 'SFD6-FP-2026',
 };
 
-function HomeScreen({ setActive }: { setActive: (id: string) => void }) {
+function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void }) {
   return (
     <div className="space-y-5 pb-28">
       <Header shareholder={shareholder} />
@@ -70,7 +71,10 @@ function HomeScreen({ setActive }: { setActive: (id: string) => void }) {
         </div>
 
         {/* QR Code Card */}
-        <div className="mt-5 rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl">
+        <div 
+          onClick={onShowQR}
+          className="mt-5 cursor-pointer rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl transition hover:bg-zinc-800"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-white/50">股东专属二维码</p>
@@ -84,12 +88,9 @@ function HomeScreen({ setActive }: { setActive: (id: string) => void }) {
             <p className="text-xs text-white/50">Referral Code</p>
             <p className="font-mono text-lg font-bold text-emerald-300">{shareholder.referral_code}</p>
           </div>
-          <button 
-            onClick={() => setActive('referral')}
-            className="mt-4 flex w-full items-center justify-center rounded-2xl bg-white py-4 text-sm font-semibold text-zinc-950 hover:bg-white/90"
-          >
-            查看带客奖励 <Icon name="chevron" className="ml-2 h-4 w-4" />
-          </button>
+          <div className="mt-4 flex items-center justify-center rounded-2xl bg-amber-400 py-4 text-sm font-semibold text-zinc-950">
+            点击生成消费二维码
+          </div>
         </div>
 
         {/* Benefits Preview */}
@@ -391,6 +392,13 @@ function ReferralScreen() {
 }
 
 function FamilyCardsScreen() {
+  const [showFamilyQR, setShowFamilyQR] = useState<{ show: boolean; index: number } | null>(null);
+
+  const familyCards = [
+    { id: 1, name: '李太太', relationship: 'spouse' as const },
+    { id: 2, name: '李小明', relationship: 'child' as const },
+  ];
+
   return (
     <div className="space-y-5 px-5 pb-28 pt-8 text-white">
       <div>
@@ -401,17 +409,17 @@ function FamilyCardsScreen() {
 
       {/* Family Cards List */}
       <div className="space-y-4">
-        {[1, 2].map((index) => (
-          <div key={index} className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white shadow-xl">
+        {familyCards.map((card, index) => (
+          <div key={card.id} className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white shadow-xl">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-emerald-400/20 px-2 py-1 text-xs font-bold text-emerald-300">
-                    {index === 1 ? '配偶' : '子女'}
+                    {card.relationship === 'spouse' ? '配偶' : '子女'}
                   </span>
-                  <span className="text-xs text-white/50">{shareholder.member_no}-{String.fromCharCode(64 + index)}</span>
+                  <span className="text-xs text-white/50">{shareholder.member_no}-{String.fromCharCode(65 + index)}</span>
                 </div>
-                <h3 className="mt-2 text-xl font-bold">{index === 1 ? '李太太' : '李小明'}</h3>
+                <h3 className="mt-2 text-xl font-bold">{card.name}</h3>
                 <p className="mt-1 text-sm text-white/50">关联主股东：{shareholder.name}</p>
               </div>
               <div className="rounded-2xl bg-white/10 p-3">
@@ -432,12 +440,26 @@ function FamilyCardsScreen() {
               </div>
             </div>
 
-            <button className="mt-4 w-full rounded-2xl bg-emerald-400 py-4 text-sm font-semibold text-zinc-950 hover:bg-emerald-300">
+            <button 
+              onClick={() => setShowFamilyQR({ show: true, index })}
+              className="mt-4 w-full rounded-2xl bg-emerald-400 py-4 text-sm font-semibold text-zinc-950 hover:bg-emerald-300"
+            >
               生成/刷新二维码
             </button>
           </div>
         ))}
       </div>
+
+      {showFamilyQR?.show && (
+        <QRCodeDisplay
+          shareholderId={shareholder.id}
+          shareholderName={shareholder.name}
+          memberNo={shareholder.member_no}
+          type="family"
+          familyCard={familyCards[showFamilyQR.index]}
+          onClose={() => setShowFamilyQR(null)}
+        />
+      )}
 
       {/* Info Card */}
       <div className="rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white">
@@ -455,16 +477,27 @@ function FamilyCardsScreen() {
 
 export default function App() {
   const [active, setActive] = useState('home');
+  const [showQR, setShowQR] = useState(false);
 
   return (
     <main className="min-h-screen bg-zinc-950 font-sans">
       <div className="mx-auto min-h-screen max-w-md overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.25),_transparent_35%),linear-gradient(180deg,#09090b_0%,#18181b_100%)] shadow-2xl">
-        {active === 'home' && <HomeScreen setActive={setActive} />}
+        {active === 'home' && <HomeScreen setActive={setActive} onShowQR={() => setShowQR(true)} />}
         {active === 'points' && <PointsScreen />}
         {active === 'benefits' && <BenefitsScreen />}
         {active === 'referral' && <ReferralScreen />}
         {active === 'family' && <FamilyCardsScreen />}
         <BottomNav active={active} setActive={setActive} />
+        
+        {showQR && (
+          <QRCodeDisplay
+            shareholderId={shareholder.id}
+            shareholderName={shareholder.name}
+            memberNo={shareholder.member_no}
+            type="self"
+            onClose={() => setShowQR(false)}
+          />
+        )}
       </div>
     </main>
   );
