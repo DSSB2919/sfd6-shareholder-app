@@ -132,9 +132,17 @@ export default function AdminShareholders() {
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Admin</p>
             <h1 className="mt-1 text-2xl font-black text-white">股东管理</h1>
           </div>
-          <button className="rounded-2xl bg-white/10 p-3 text-white hover:bg-white/20">
-            <Icon name="logout" className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href="/admin/redemptions"
+              className="rounded-2xl bg-amber-400/20 px-4 py-2 text-sm font-bold text-amber-300 hover:bg-amber-400/30"
+            >
+              核销记录
+            </a>
+            <button className="rounded-2xl bg-white/10 p-3 text-white hover:bg-white/20">
+              <Icon name="logout" className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
