@@ -27,6 +27,9 @@ export default function CashierDashboard() {
   const [foodAmount, setFoodAmount] = useState(0);
   const [alcoholAmount, setAlcoholAmount] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [foodInput, setFoodInput] = useState('');
+  const [alcoholInput, setAlcoholInput] = useState('');
 
   // Mock scan function
   const handleScan = () => {
@@ -57,7 +60,46 @@ export default function CashierDashboard() {
       alert('积分余额不足');
       return;
     }
+    if (!receiptImage) {
+      alert('请先上传抵扣单据照片');
+      return;
+    }
     setShowConfirm(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // TODO: 上传到云端存储（如AWS S3, Cloudinary等）
+      // 目前先用本地预览，后续替换为实际上传逻辑
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReceiptImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFoodInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFoodInput(value);
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 0) {
+      setFoodAmount(numValue);
+    } else if (value === '') {
+      setFoodAmount(0);
+    }
+  };
+
+  const handleAlcoholInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setAlcoholInput(value);
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 0) {
+      setAlcoholAmount(numValue);
+    } else if (value === '') {
+      setAlcoholAmount(0);
+    }
   };
 
   const confirmRedeem = () => {
@@ -170,6 +212,12 @@ export default function CashierDashboard() {
                     <span>抵扣积分</span>
                     <span className="font-bold">{totalDeduct} 分</span>
                   </div>
+                  {receiptImage && (
+                    <div className="mt-3">
+                      <span className="text-white/60">单据照片</span>
+                      <img src={receiptImage} alt="Receipt" className="mt-2 w-full rounded-xl" />
+                    </div>
+                  )}
                   <div className="mt-3 flex justify-between border-t border-white/10 pt-3">
                     <span className="text-white/60">实付金额</span>
                     <span className="text-xl font-bold text-amber-300">{formatRM(finalPay)}</span>
@@ -236,22 +284,17 @@ export default function CashierDashboard() {
                     -{foodDeduct} 分
                   </span>
                 </div>
-                <div className="mt-4 flex items-center gap-3">
-                  <button
-                    onClick={() => setFoodAmount(Math.max(0, foodAmount - 10))}
-                    className="rounded-xl bg-white/10 p-3 text-white hover:bg-white/20"
-                  >
-                    <Icon name="minus" className="h-4 w-4" />
-                  </button>
-                  <div className="flex-1 rounded-xl bg-white px-4 py-3 text-center text-xl font-bold text-zinc-950">
-                    {formatRM(foodAmount)}
-                  </div>
-                  <button
-                    onClick={() => setFoodAmount(foodAmount + 10)}
-                    className="rounded-xl bg-white/10 p-3 text-white hover:bg-white/20"
-                  >
-                    <Icon name="plus" className="h-4 w-4" />
-                  </button>
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm text-white/60">输入总额 (RM)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={foodInput}
+                    onChange={handleFoodInputChange}
+                    placeholder="0.00"
+                    className="w-full rounded-xl bg-white px-4 py-3 text-center text-xl font-bold text-zinc-950 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  />
                 </div>
               </div>
 
@@ -266,24 +309,53 @@ export default function CashierDashboard() {
                     -{alcoholDeduct} 分
                   </span>
                 </div>
-                <div className="mt-4 flex items-center gap-3">
-                  <button
-                    onClick={() => setAlcoholAmount(Math.max(0, alcoholAmount - 10))}
-                    className="rounded-xl bg-white/10 p-3 text-white hover:bg-white/20"
-                  >
-                    <Icon name="minus" className="h-4 w-4" />
-                  </button>
-                  <div className="flex-1 rounded-xl bg-white px-4 py-3 text-center text-xl font-bold text-zinc-950">
-                    {formatRM(alcoholAmount)}
-                  </div>
-                  <button
-                    onClick={() => setAlcoholAmount(alcoholAmount + 10)}
-                    className="rounded-xl bg-white/10 p-3 text-white hover:bg-white/20"
-                  >
-                    <Icon name="plus" className="h-4 w-4" />
-                  </button>
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm text-white/60">输入总额 (RM)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={alcoholInput}
+                    onChange={handleAlcoholInputChange}
+                    placeholder="0.00"
+                    className="w-full rounded-xl bg-white px-4 py-3 text-center text-xl font-bold text-zinc-950 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  />
                 </div>
               </div>
+            </div>
+
+            {/* Receipt Upload */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+              <h3 className="mb-4 font-bold text-white">上传抵扣单据</h3>
+              {!receiptImage ? (
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/20 bg-white/5 p-8 transition hover:border-amber-400/50 hover:bg-white/10">
+                  <Icon name="camera" className="mb-3 h-10 w-10 text-white/40" />
+                  <span className="text-sm text-white/60">点击拍照或选择图片</span>
+                  <span className="mt-1 text-xs text-white/40">支持 JPG, PNG</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              ) : (
+                <div className="relative">
+                  <img
+                    src={receiptImage}
+                    alt="Receipt"
+                    className="w-full rounded-2xl"
+                  />
+                  <button
+                    onClick={() => setReceiptImage(null)}
+                    className="absolute right-2 top-2 rounded-full bg-red-500/80 p-2 text-white hover:bg-red-500"
+                  >
+                    <Icon name="close" className="h-4 w-4" />
+                  </button>
+                  <p className="mt-2 text-center text-xs text-emerald-300">✓ 单据已上传</p>
+                </div>
+              )}
             </div>
 
             {/* Summary */}
