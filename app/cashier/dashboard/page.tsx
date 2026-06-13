@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct } from '@/lib/utils';
+import { uploadReceipt } from '@/lib/supabase';
 
 interface ScannedData {
   type: 'self' | 'family';
@@ -28,8 +29,11 @@ export default function CashierDashboard() {
   const [alcoholAmount, setAlcoholAmount] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [receiptImage, setReceiptImage] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [foodInput, setFoodInput] = useState('');
   const [alcoholInput, setAlcoholInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mock scan function
   const handleScan = () => {
@@ -67,16 +71,41 @@ export default function CashierDashboard() {
     setShowConfirm(true);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // TODO: 上传到云端存储（如AWS S3, Cloudinary等）
-      // 目前先用本地预览，后续替换为实际上传逻辑
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReceiptImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('请上传图片文件');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('图片大小不能超过 5MB');
+      return;
+    }
+
+    // Show local preview immediately
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setReceiptImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    setReceiptFile(file);
+
+    // Upload to Supabase
+    setUploading(true);
+    const redemptionId = `RED_${Date.now()}`;
+    const publicUrl = await uploadReceipt(file, redemptionId);
+    setUploading(false);
+
+    if (publicUrl) {
+      setReceiptImage(publicUrl);
+      console.log('Receipt uploaded:', publicUrl);
+    } else {
+      alert('上传失败，请重试');
+      setReceiptImage(null);
+      setReceiptFile(null);
     }
   };
 
@@ -102,12 +131,30 @@ export default function CashierDashboard() {
     }
   };
 
-  const confirmRedeem = () => {
-    // Process redemption
+  const confirmRedeem = async () => {
+    // Process redemption with receipt URL
+    const redemptionData = {
+      shareholderId: scannedData?.shareholder.id,
+      shareholderName: scannedData?.shareholder.name,
+      foodAmount,
+      alcoholAmount,
+      totalDeduct,
+      finalPay,
+      receiptUrl: receiptImage,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log('Redemption data:', redemptionData);
+    // TODO: Send to backend API to save redemption record
+
     alert('核销成功！');
     setScannedData(null);
     setFoodAmount(0);
     setAlcoholAmount(0);
+    setFoodInput('');
+    setAlcoholInput('');
+    setReceiptImage(null);
+    setReceiptFile(null);
     setShowConfirm(false);
   };
 
@@ -331,29 +378,50 @@ export default function CashierDashboard() {
                 <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/20 bg-white/5 p-8 transition hover:border-amber-400/50 hover:bg-white/10">
                   <Icon name="camera" className="mb-3 h-10 w-10 text-white/40" />
                   <span className="text-sm text-white/60">点击拍照或选择图片</span>
-                  <span className="mt-1 text-xs text-white/40">支持 JPG, PNG</span>
+                  <span className="mt-1 text-xs text-white/40">支持 JPG, PNG (最大 5MB)</span>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     capture="environment"
                     onChange={handleImageUpload}
                     className="hidden"
+                    disabled={uploading}
                   />
                 </label>
               ) : (
                 <div className="relative">
-                  <img
-                    src={receiptImage}
-                    alt="Receipt"
-                    className="w-full rounded-2xl"
-                  />
-                  <button
-                    onClick={() => setReceiptImage(null)}
-                    className="absolute right-2 top-2 rounded-full bg-red-500/80 p-2 text-white hover:bg-red-500"
-                  >
-                    <Icon name="close" className="h-4 w-4" />
-                  </button>
-                  <p className="mt-2 text-center text-xs text-emerald-300">✓ 单据已上传</p>
+                  {uploading ? (
+                    <div className="flex h-40 items-center justify-center rounded-2xl bg-white/5">
+                      <div className="text-center">
+                        <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent"></div>
+                        <span className="text-sm text-white/60">上传中...</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <img
+                        src={receiptImage}
+                        alt="Receipt"
+                        className="w-full rounded-2xl"
+                      />
+                      <button
+                        onClick={() => {
+                          setReceiptImage(null);
+                          setReceiptFile(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                        className="absolute right-2 top-2 rounded-full bg-red-500/80 p-2 text-white hover:bg-red-500"
+                      >
+                        <Icon name="close" className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                  <p className="mt-2 text-center text-xs text-emerald-300">
+                    {uploading ? '正在上传到云端...' : '✓ 单据已上传至云端'}
+                  </p>
                 </div>
               )}
             </div>
