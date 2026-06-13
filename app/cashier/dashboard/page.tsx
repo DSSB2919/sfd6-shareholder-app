@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct } from '@/lib/utils';
-import { uploadReceipt } from '@/lib/supabase';
+import { uploadReceipt, createRedemption, type Redemption } from '@/lib/supabase';
 
 interface ScannedData {
   type: 'self' | 'family';
@@ -132,30 +132,44 @@ export default function CashierDashboard() {
   };
 
   const confirmRedeem = async () => {
-    // Process redemption with receipt URL
+    if (!scannedData) return;
+
+    // Extract receipt path from URL
+    let receiptPath: string | null = null;
+    if (receiptImage) {
+      const urlParts = receiptImage.split('/');
+      receiptPath = `cashier/${urlParts[urlParts.length - 1]}`;
+    }
+
+    // Save to database
     const redemptionData = {
-      shareholderId: scannedData?.shareholder.id,
-      shareholderName: scannedData?.shareholder.name,
-      foodAmount,
-      alcoholAmount,
-      totalDeduct,
-      finalPay,
-      receiptUrl: receiptImage,
-      timestamp: new Date().toISOString(),
+      shareholder_id: scannedData.shareholder.id,
+      shareholder_name: scannedData.shareholder.name,
+      shareholder_member_no: scannedData.shareholder.member_no,
+      food_amount: foodAmount,
+      alcohol_amount: alcoholAmount,
+      total_deduct: totalDeduct,
+      final_pay: finalPay,
+      receipt_url: receiptImage,
+      receipt_path: receiptPath,
+      status: 'pending' as const,
     };
 
-    console.log('Redemption data:', redemptionData);
-    // TODO: Send to backend API to save redemption record
+    const result = await createRedemption(redemptionData);
 
-    alert('核销成功！');
-    setScannedData(null);
-    setFoodAmount(0);
-    setAlcoholAmount(0);
-    setFoodInput('');
-    setAlcoholInput('');
-    setReceiptImage(null);
-    setReceiptFile(null);
-    setShowConfirm(false);
+    if (result) {
+      alert('核销成功！');
+      setScannedData(null);
+      setFoodAmount(0);
+      setAlcoholAmount(0);
+      setFoodInput('');
+      setAlcoholInput('');
+      setReceiptImage(null);
+      setReceiptFile(null);
+      setShowConfirm(false);
+    } else {
+      alert('核销失败，请重试');
+    }
   };
 
   return (

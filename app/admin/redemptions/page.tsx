@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM } from '@/lib/utils';
-import { supabase, RECEIPTS_BUCKET } from '@/lib/supabase';
+import { supabase, RECEIPTS_BUCKET, getRedemptions, updateRedemptionStatus, deleteRedemption, type Redemption } from '@/lib/supabase';
 
 interface Redemption {
   id: string;
@@ -23,40 +23,26 @@ interface Redemption {
   verified_by: string | null;
 }
 
-// Mock data for demo (replace with actual DB fetch)
-const mockRedemptions: Redemption[] = [
-  {
-    id: 'RED_001',
-    shareholder_id: 1,
-    shareholder_name: 'MR. LEE WEN CHUIN',
-    shareholder_member_no: 'SFD6-FP-001',
-    food_amount: 150.00,
-    alcohol_amount: 80.00,
-    total_deduct: 5300,
-    final_pay: 177.00,
-    receipt_url: null,
-    receipt_path: null,
-    status: 'pending',
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    verified_at: null,
-    verified_by: null,
-  },
-];
+
 
 export default function AdminRedemptions() {
-  const [redemptions, setRedemptions] = useState<Redemption[]>(mockRedemptions);
+  const [redemptions, setRedemptions] = useState<Redemption[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified'>('all');
   const [selectedRedemption, setSelectedRedemption] = useState<Redemption | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // TODO: Fetch from actual database
+  // Fetch from database
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    loadRedemptions();
   }, []);
+
+  const loadRedemptions = async () => {
+    setLoading(true);
+    const data = await getRedemptions();
+    setRedemptions(data);
+    setLoading(false);
+  };
 
   const filteredRedemptions = redemptions.filter(r => {
     if (filter === 'all') return true;
@@ -67,30 +53,26 @@ export default function AdminRedemptions() {
   const verifiedCount = redemptions.filter(r => r.status === 'verified').length;
 
   const handleVerify = async (redemption: Redemption, status: 'verified' | 'rejected') => {
-    // TODO: Update in database
-    setRedemptions(redemptions.map(r => 
-      r.id === redemption.id 
-        ? { 
-            ...r, 
-            status,
-            verified_at: new Date().toISOString(),
-            verified_by: 'admin',
-          }
-        : r
-    ));
+    const success = await updateRedemptionStatus(redemption.id, status, 'admin');
     
-    if (status === 'verified') {
-      alert('已标记为已核实');
-    } else {
-      // Delete receipt if rejected
-      if (redemption.receipt_path) {
-        await supabase.storage.from(RECEIPTS_BUCKET).remove([redemption.receipt_path]);
+    if (success) {
+      if (status === 'verified') {
+        alert('已标记为已核实');
+      } else {
+        // Delete receipt if rejected
+        if (redemption.receipt_path) {
+          await supabase.storage.from(RECEIPTS_BUCKET).remove([redemption.receipt_path]);
+        }
+        alert('已拒绝并删除照片');
       }
-      alert('已拒绝并删除照片');
+      
+      // Refresh list
+      await loadRedemptions();
+      setShowDetailModal(false);
+      setSelectedRedemption(null);
+    } else {
+      alert('操作失败，请重试');
     }
-    
-    setShowDetailModal(false);
-    setSelectedRedemption(null);
   };
 
   const handleDeleteReceipt = async (redemption: Redemption) => {
@@ -99,27 +81,16 @@ export default function AdminRedemptions() {
     const confirmed = confirm('确定要删除这张照片吗？');
     if (!confirmed) return;
 
-    const { error } = await supabase.storage
-      .from(RECEIPTS_BUCKET)
-      .remove([redemption.receipt_path]);
+    const success = await deleteRedemption(redemption.id, redemption.receipt_path);
 
-    if (error) {
-      alert('删除失败: ' + error.message);
-      return;
+    if (success) {
+      await loadRedemptions();
+      setShowDetailModal(false);
+      setSelectedRedemption(null);
+      alert('照片已删除');
+    } else {
+      alert('删除失败，请重试');
     }
-
-    // Update local state
-    setRedemptions(redemptions.map(r => 
-      r.id === redemption.id 
-        ? { ...r, receipt_url: null, receipt_path: null }
-        : r
-    ));
-    
-    if (selectedRedemption?.id === redemption.id) {
-      setSelectedRedemption({ ...selectedRedemption, receipt_url: null, receipt_path: null });
-    }
-    
-    alert('照片已删除');
   };
 
   const formatDate = (dateStr: string) => {
