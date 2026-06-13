@@ -6,23 +6,6 @@ import { Icon } from '@/components/Icon';
 import { formatRM } from '@/lib/utils';
 import { supabase, RECEIPTS_BUCKET, getRedemptions, updateRedemptionStatus, deleteRedemption, type Redemption } from '@/lib/supabase';
 
-interface Redemption {
-  id: string;
-  shareholder_id: number;
-  shareholder_name: string;
-  shareholder_member_no: string;
-  food_amount: number;
-  alcohol_amount: number;
-  total_deduct: number;
-  final_pay: number;
-  receipt_url: string | null;
-  receipt_path: string | null;
-  status: 'pending' | 'verified' | 'rejected';
-  created_at: string;
-  verified_at: string | null;
-  verified_by: string | null;
-}
-
 
 
 export default function AdminRedemptions() {
