@@ -222,54 +222,92 @@ function PointsScreen() {
 }
 
 function BenefitsScreen() {
+  // 过滤掉1%（不开放），3%标记为sleeping
+  const availableTiers = TIERS.filter(t => t.share !== '1%');
+
   return (
     <div className="space-y-5 px-5 pb-28 pt-8 text-white">
       <div>
         <p className="text-sm uppercase tracking-[0.25em] text-amber-300">Privilege</p>
         <h2 className="mt-1 text-3xl font-black">新投资人股东权益</h2>
-        <p className="mt-2 text-sm text-white/50">1% = RM9,600。投资越高，消费权益、社交身份与资源变现能力越强。</p>
+        <p className="mt-2 text-sm text-white/50">本轮融资开放 5% / 10% / 20%+ 等级</p>
+      </div>
+
+      {/* 本轮融资说明 */}
+      <div className="rounded-3xl border border-emerald-400/30 bg-emerald-400/10 p-5 shadow-xl">
+        <div className="flex items-center gap-2">
+          <Icon name="info" className="h-5 w-5 text-emerald-300" />
+          <span className="font-bold text-emerald-300">本轮融资说明</span>
+        </div>
+        <p className="mt-2 text-sm text-white/70">
+          1% 与 3% 等级本轮暂不开放。现有 4 位 3% Sleeping 股东保留权益。
+        </p>
       </div>
 
       <div className="space-y-4">
-        {TIERS.map((tier, index) => {
-          const isTopTier = index === TIERS.length - 1;
+        {availableTiers.map((tier, index) => {
+          const isTopTier = index === availableTiers.length - 1;
+          const isSleeping = tier.share === '3%';
           return (
             <div
               key={tier.name}
-              className={`rounded-3xl border border-white/10 p-5 shadow-xl ${
+              className={`rounded-3xl border p-5 shadow-xl ${
                 isTopTier
-                  ? 'bg-gradient-to-br from-amber-200 via-white to-emerald-100 text-zinc-950'
-                  : 'bg-white/10 text-white'
+                  ? 'border-amber-300/30 bg-gradient-to-br from-amber-200 via-white to-emerald-100 text-zinc-950'
+                  : isSleeping
+                    ? 'border-white/5 bg-white/5 text-white/50'
+                    : 'border-white/10 bg-white/10 text-white'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className={`text-xs font-bold uppercase tracking-[0.2em] ${isTopTier ? 'text-zinc-600' : 'text-white/50'}`}>
-                    {tier.tag}
-                  </p>
-                  <h3 className="mt-1 text-xl font-black">{tier.name}</h3>
-                  <p className={`mt-1 text-sm ${isTopTier ? 'text-zinc-600' : 'text-white/50'}`}>
+                  <div className="flex items-center gap-2">
+                    <p className={`text-xs font-bold uppercase tracking-[0.2em] ${
+                      isTopTier ? 'text-zinc-600' : isSleeping ? 'text-white/30' : 'text-white/50'
+                    }`}>
+                      {tier.tag}
+                    </p>
+                    {isSleeping && (
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/40">
+                        Sleeping
+                      </span>
+                    )}
+                  </div>
+                  <h3 className={`mt-1 text-xl font-black ${isSleeping ? 'text-white/60' : ''}`}>{tier.name}</h3>
+                  <p className={`mt-1 text-sm ${
+                    isTopTier ? 'text-zinc-600' : isSleeping ? 'text-white/30' : 'text-white/50'
+                  }`}>
                     {tier.share} · {tier.investment} · {tier.points} points
                   </p>
                 </div>
-                <Icon name="crown" className={`h-7 w-7 ${isTopTier ? 'text-zinc-950' : 'text-amber-300'}`} />
+                <Icon name="crown" className={`h-7 w-7 ${
+                  isTopTier ? 'text-zinc-950' : isSleeping ? 'text-white/30' : 'text-amber-300'
+                }`} />
               </div>
-              <p className={`mt-3 rounded-2xl px-3 py-2 text-sm ${isTopTier ? 'bg-zinc-950/10 text-zinc-700' : 'bg-white/10 text-white/65'}`}>
-                {tier.highlight}
+              <p className={`mt-3 rounded-2xl px-3 py-2 text-sm ${
+                isTopTier
+                  ? 'bg-zinc-950/10 text-zinc-700'
+                  : isSleeping
+                    ? 'bg-white/5 text-white/40'
+                    : 'bg-white/10 text-white/65'
+              }`}>
+                {isSleeping ? '本轮暂不开放，仅保留现有 Sleeping 股东权益' : tier.highlight}
               </p>
-              <div className="mt-4 grid gap-2">
-                {tier.benefits.map((benefit) => (
-                  <div
-                    key={benefit}
-                    className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-sm ${
-                      isTopTier ? 'bg-zinc-950/10' : 'bg-white/10'
-                    }`}
-                  >
-                    <Icon name="shield" className="h-4 w-4 shrink-0" />
-                    {benefit}
-                  </div>
-                ))}
-              </div>
+              {!isSleeping && (
+                <div className="mt-4 grid gap-2">
+                  {tier.benefits.map((benefit) => (
+                    <div
+                      key={benefit}
+                      className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-sm ${
+                        isTopTier ? 'bg-zinc-950/10' : 'bg-white/10'
+                      }`}
+                    >
+                      <Icon name="shield" className="h-4 w-4 shrink-0" />
+                      {benefit}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}

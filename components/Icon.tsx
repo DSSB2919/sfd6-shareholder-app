@@ -173,6 +173,13 @@ export function Icon({ name, className = 'h-5 w-5' }: IconProps) {
         <path d="M8.5 13.5l7 3" />
       </>
     ),
+    info: (
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </>
+    ),
   };
 
   return (
