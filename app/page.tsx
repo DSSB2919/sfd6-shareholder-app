@@ -24,50 +24,67 @@ const shareholder = {
   referral_code: 'SFD6-FP-2026',
 };
 
+// 获取本周日期范围
+function getWeekRange(): string {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const formatDate = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日`;
+  return `${formatDate(monday)} - ${formatDate(sunday)}`;
+}
+
 function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void; }) {
+  const weekRange = getWeekRange();
+  const weeklyUsed = false; // TODO: 从API获取实际使用状态
+
   return (
     <div className="space-y-5 pb-28">
       <Header shareholder={shareholder} onShowQR={onShowQR} />
 
       <div className="px-5">
-        {/* Investment Card */}
-        <div className="mb-5 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 text-white shadow-xl">
-          <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Investor Offer</p>
-          <h3 className="mt-2 text-2xl font-black">1% 股份 = RM9,600</h3>
-          <p className="mt-2 text-sm leading-relaxed text-white/60">
-            每 1% 股份可获得 9,600 Snow Points。20% 创始合伙股东可获得 192,000 Snow Points 与最高等级股东礼遇。
-          </p>
-          <p className="mt-3 rounded-2xl bg-white/10 px-3 py-2 text-xs leading-relaxed text-white/50">
-            Snow Points 仅限消费权益，不可提现、不退款、不可转让、不构成固定回报承诺。
-          </p>
-        </div>
-
-        {/* Stats Grid */}
+        {/* Stats Grid - 简化为3个 */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             icon="wallet"
             label="Snow Points"
             value={shareholder.points_balance.toLocaleString()}
-            sub="20% Founding Partner"
-          />
-          <StatCard
-            icon="gift"
-            label="Weekly Points"
-            value={shareholder.weekly_points.toString()}
-            sub="每周自动更新"
+            sub={`${shareholder.share_percent}% ${shareholder.tier}`}
           />
           <StatCard
             icon="shield"
             label="Shareholding"
             value={`${shareholder.share_percent}%`}
-            sub={`${formatRM(shareholder.actual_investment_rm)} 注资`}
+            sub={shareholder.tier}
           />
-          <StatCard
-            icon="ticket"
-            label="Family Cards"
-            value="6"
-            sub="家属 / 商务副卡"
-          />
+        </div>
+
+        {/* Weekly Points 详细卡片 */}
+        <div className="mt-3 rounded-3xl border border-amber-300/30 bg-gradient-to-br from-amber-300/20 to-amber-950/30 p-5 text-white shadow-xl">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Icon name="gift" className="h-5 w-5 text-amber-300" />
+                <span className="text-sm text-amber-300">Weekly Points</span>
+              </div>
+              <h3 className="mt-2 text-3xl font-black">{shareholder.weekly_points.toLocaleString()}</h3>
+              <p className="mt-1 text-sm text-white/60">{weekRange}</p>
+            </div>
+            <div className="rounded-full bg-amber-400/20 px-3 py-1">
+              <span className={`text-xs font-bold ${weeklyUsed ? 'text-white/50' : 'text-amber-300'}`}>
+                {weeklyUsed ? '已使用' : '未使用'}
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2 rounded-2xl bg-zinc-950/50 p-4 text-xs text-white/60">
+            <p>• 每周限用一次</p>
+            <p>• 消费超过补差价，消费少于不退款</p>
+            <p>• 每周一自动重置</p>
+          </div>
         </div>
 
         {/* Referral Code Card */}
