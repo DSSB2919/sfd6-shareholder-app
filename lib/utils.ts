@@ -4,12 +4,30 @@ export function formatRM(value: number): string {
   return `RM${value.toLocaleString('en-MY', { maximumFractionDigits: 0 })}`;
 }
 
-export function calculateFoodDeduct(amount: number): number {
-  return Math.floor(amount * 0.3);
+// 根据股东等级获取抵扣比例
+export function getDeductRateByTier(tier: string): { food: number; alcohol: number } {
+  switch (tier) {
+    case 'Founding Partner':
+      return { food: 0.25, alcohol: 0.10 };
+    case 'Core Shareholder':
+      return { food: 0.20, alcohol: 0.08 };
+    case 'Strategic Shareholder':
+      return { food: 0.15, alcohol: 0.05 };
+    case 'Lifestyle Shareholder':
+      return { food: 0.10, alcohol: 0.03 };
+    default:
+      return { food: 0.10, alcohol: 0.03 };
+  }
 }
 
-export function calculateAlcoholDeduct(amount: number): number {
-  return Math.floor(amount * 0.1);
+export function calculateFoodDeduct(amount: number, tier?: string): number {
+  const rate = tier ? getDeductRateByTier(tier).food : 0.30;
+  return Math.floor(amount * rate);
+}
+
+export function calculateAlcoholDeduct(amount: number, tier?: string): number {
+  const rate = tier ? getDeductRateByTier(tier).alcohol : 0.10;
+  return Math.floor(amount * rate);
 }
 
 export function calculateReferralReward(amount: number, rate: number): number {

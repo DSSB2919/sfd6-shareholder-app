@@ -8,7 +8,7 @@ import { StatCard } from '@/components/StatCard';
 import { Icon } from '@/components/Icon';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { BENEFITS, TIERS, ACTIVITY_REWARDS } from '@/types';
-import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward } from '@/lib/utils';
+import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward, getDeductRateByTier } from '@/lib/utils';
 
 // Mock shareholder data - replace with API call
 const shareholder = {
@@ -110,8 +110,13 @@ function PointsScreen() {
   const [foodAmount, setFoodAmount] = useState(100);
   const [alcoholAmount, setAlcoholAmount] = useState(100);
 
-  const foodDeduct = calculateFoodDeduct(foodAmount);
-  const alcoholDeduct = calculateAlcoholDeduct(alcoholAmount);
+  // 根据股东等级获取抵扣比例
+  const deductRate = getDeductRateByTier(shareholder.tier);
+  const foodRatePercent = Math.round(deductRate.food * 100);
+  const alcoholRatePercent = Math.round(deductRate.alcohol * 100);
+
+  const foodDeduct = calculateFoodDeduct(foodAmount, shareholder.tier);
+  const alcoholDeduct = calculateAlcoholDeduct(alcoholAmount, shareholder.tier);
   const totalBill = foodAmount + alcoholAmount;
   const totalDeduct = foodDeduct + alcoholDeduct;
   const finalPay = totalBill - totalDeduct;
@@ -121,7 +126,7 @@ function PointsScreen() {
       <div>
         <p className="text-sm uppercase tracking-[0.25em] text-emerald-300">Snow Points</p>
         <h2 className="mt-1 text-3xl font-black">积分抵扣计算器</h2>
-        <p className="mt-2 text-sm text-white/50">食物 / 无酒精饮料最高 30%，酒精饮料最高 10%。</p>
+        <p className="mt-2 text-sm text-white/50">您的等级抵扣比例：食物 {foodRatePercent}% / 酒精 {alcoholRatePercent}%</p>
       </div>
 
       {/* 股东等级和实时积分余额 */}
@@ -140,7 +145,7 @@ function PointsScreen() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold">食物 / 无酒精饮料消费</h3>
-            <p className="mt-1 text-xs text-white/50">抵扣比例：30%</p>
+            <p className="mt-1 text-xs text-white/50">抵扣比例：{foodRatePercent}%</p>
           </div>
           <p className="rounded-full bg-emerald-400/15 px-3 py-1 text-sm font-bold text-emerald-300">
             可抵 {foodDeduct} 分
@@ -172,7 +177,7 @@ function PointsScreen() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold">酒精饮料消费</h3>
-            <p className="mt-1 text-xs text-white/50">抵扣比例：10%</p>
+            <p className="mt-1 text-xs text-white/50">抵扣比例：{alcoholRatePercent}%</p>
           </div>
           <p className="rounded-full bg-emerald-400/15 px-3 py-1 text-sm font-bold text-emerald-300">
             可抵 {alcoholDeduct} 分
