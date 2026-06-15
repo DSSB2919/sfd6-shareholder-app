@@ -453,6 +453,147 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
   );
 }
 
+function SettingsScreen() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!currentPassword) {
+      alert('请输入当前密码');
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert('新密码至少需要6位');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('两次输入的新密码不一致');
+      return;
+    }
+    if (newPassword === currentPassword) {
+      alert('新密码不能与当前密码相同');
+      return;
+    }
+
+    setLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    setLoading(false);
+    setSuccess(true);
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+
+    setTimeout(() => setSuccess(false), 3000);
+  };
+
+  const handleLogout = () => {
+    if (confirm('确定要退出登录吗？')) {
+      window.location.href = '/login';
+    }
+  };
+
+  return (
+    <div className="space-y-5 px-5 pb-28 pt-8">
+      <div>
+        <p className="text-sm uppercase tracking-[0.25em] text-emerald-300">Settings</p>
+        <h2 className="mt-1 text-3xl font-black">设置</h2>
+      </div>
+
+      {/* Security Section */}
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <h3 className="text-lg font-bold text-white">修改密码</h3>
+        <p className="mt-1 text-sm text-white/50">定期更换密码可以提高账户安全性</p>
+
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-xl bg-emerald-400/20 p-3 text-center"
+          >
+            <p className="text-sm font-bold text-emerald-300">✓ 密码修改成功</p>
+          </motion.div>
+        )}
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="mb-2 block text-sm text-white/60">当前密码</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="请输入当前密码"
+              className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-white/60">新密码</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="至少6位字符"
+              className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm text-white/60">确认新密码</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="再次输入新密码"
+              className="w-full rounded-xl border border-white/10 bg-zinc-900 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleChangePassword}
+          disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+          className="mt-5 w-full rounded-xl bg-emerald-400 py-4 font-bold text-zinc-950 transition hover:bg-emerald-300 disabled:opacity-50"
+        >
+          {loading ? '修改中...' : '修改密码'}
+        </button>
+      </div>
+
+      {/* Account Section */}
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-white">退出登录</h3>
+            <p className="mt-1 text-sm text-white/50">退出当前账户</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="rounded-xl bg-red-400/20 px-4 py-2 text-sm font-bold text-red-300 hover:bg-red-400/30"
+          >
+            退出
+          </button>
+        </div>
+      </div>
+
+      {/* About Section */}
+      <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-400/20">
+          <Icon name="snow" className="h-8 w-8 text-emerald-300" />
+        </div>
+        <h3 className="mt-3 text-lg font-bold text-white">SFD6 Shareholder App</h3>
+        <p className="mt-1 text-sm text-white/50">版本 1.0.0</p>
+        <p className="mt-4 text-xs text-white/30">
+          Snowy Fox District Six Entertainment Sdn Bhd<br />
+          股东专属应用 · 仅限授权用户
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function FamilyCardsScreen() {
   const [showFamilyQR, setShowFamilyQR] = useState<{ show: boolean; index: number } | null>(null);
 
@@ -554,7 +695,7 @@ export default function App() {
         {active === 'points' && <PointsScreen />}
         {active === 'benefits' && <BenefitsScreen />}
         {active === 'referral' && <ReferralScreen onShowReferralQR={() => setShowReferralQR(true)} />}
-        {active === 'family' && <FamilyCardsScreen />}
+        {active === 'settings' && <SettingsScreen />}
         <BottomNav active={active} setActive={setActive} />
 
         {/* 股东自用码 */}

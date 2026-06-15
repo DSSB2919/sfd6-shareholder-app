@@ -84,9 +84,13 @@ export default function ChangePasswordPage() {
             transition={{ duration: 0.3 }}
             className="space-y-6"
           >
-            <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4">
-              <p className="text-sm text-amber-200">
-                <span className="font-bold">安全提示：</span>为了您的账户安全，首次登录后请立即修改默认密码。
+            <div className="rounded-2xl border border-red-400/20 bg-red-400/10 p-4">
+              <div className="flex items-center gap-2">
+                <Icon name="shield" className="h-5 w-5 text-red-300" />
+                <p className="text-sm font-bold text-red-300">安全警告</p>
+              </div>
+              <p className="mt-2 text-xs text-red-200/80">
+                您正在使用默认密码登录。为了账户安全，请立即修改密码。
               </p>
             </div>
 
@@ -99,6 +103,7 @@ export default function ChangePasswordPage() {
                 placeholder="请输入默认密码 123456"
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-lg text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
               />
+              <p className="mt-2 text-xs text-white/40">默认密码：123456</p>
             </div>
 
             <button

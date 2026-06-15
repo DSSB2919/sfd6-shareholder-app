@@ -12,7 +12,7 @@ const items = [
   { id: 'points', label: '积分', icon: 'wallet' },
   { id: 'benefits', label: '福利', icon: 'crown' },
   { id: 'referral', label: '带客', icon: 'users' },
-  { id: 'family', label: '副卡', icon: 'ticket' },
+  { id: 'settings', label: '设置', icon: 'settings' },
 ];
 
 export function BottomNav({ active, setActive }: BottomNavProps) {

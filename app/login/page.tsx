@@ -131,8 +131,14 @@ export default function LoginPage() {
 
             <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4">
               <p className="text-sm text-amber-200">
-                <span className="font-bold">提示：</span>首次登录默认密码为 123456，登录后请立即修改密码。
+                <span className="font-bold">安全提示：</span>
               </p>
+              <ul className="mt-2 space-y-1 text-xs text-amber-200/80">
+                <li>• 首次登录默认密码为 123456</li>
+                <li>• 登录后系统会强制要求修改密码</li>
+                <li>• 请设置6位以上强密码</li>
+                <li>• 请勿将密码告知他人</li>
+              </ul>
             </div>
           </motion.div>
         ) : (
