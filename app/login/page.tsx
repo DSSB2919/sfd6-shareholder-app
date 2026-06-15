@@ -6,43 +6,33 @@ import { Icon } from '@/components/Icon';
 
 export default function LoginPage() {
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'phone' | 'password'>('phone');
   const [loading, setLoading] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
-  const handleSendOTP = async () => {
+  const handleCheckPhone = async () => {
     if (!phone || phone.length < 10) {
       alert('请输入有效的手机号');
       return;
     }
     
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Simulate API call - check if phone exists and if first login
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // In real implementation, send OTP via WhatsApp API
-    console.log('Sending OTP to', phone);
+    // Mock: check if this is first login (password is default 123456)
+    // In real implementation, API should return: { exists: true, isFirstLogin: boolean }
+    const mockIsFirstLogin = phone === '+60123456789'; // Example
+    setIsFirstLogin(mockIsFirstLogin);
     
-    setStep('otp');
+    setStep('password');
     setLoading(false);
-    setCountdown(60);
-    
-    // Start countdown
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
-  const handleVerifyOTP = async () => {
-    if (otp.length !== 6) {
-      alert('请输入6位验证码');
+  const handleLogin = async () => {
+    if (!password) {
+      alert('请输入密码');
       return;
     }
     
@@ -50,17 +40,20 @@ export default function LoginPage() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // In real implementation, verify OTP and get JWT token
-    console.log('Verifying OTP', otp);
+    // Check if password is default 123456
+    if (password === '123456') {
+      // Redirect to change password page
+      window.location.href = '/change-password';
+      return;
+    }
     
-    // Redirect to main app
+    // Normal login
+    console.log('Login success', phone, password);
     window.location.href = '/';
   };
 
   const formatPhone = (value: string) => {
-    // Remove non-numeric characters
     const numeric = value.replace(/\D/g, '');
-    // Add +60 prefix if not present
     if (numeric.startsWith('60')) {
       return '+' + numeric;
     }
@@ -94,12 +87,12 @@ export default function LoginPage() {
           </div>
           
           <h2 className="mt-8 text-3xl font-black text-white">
-            {step === 'phone' ? '股东登录' : '输入验证码'}
+            {step === 'phone' ? '股东登录' : '输入密码'}
           </h2>
           <p className="mt-2 text-sm text-white/60">
             {step === 'phone' 
-              ? '请输入您的手机号获取OTP验证码' 
-              : `验证码已发送至 ${phone}`}
+              ? '请输入您的手机号' 
+              : `欢迎回来，${phone}`}
           </p>
         </motion.div>
       </div>
@@ -129,16 +122,16 @@ export default function LoginPage() {
             </div>
 
             <button
-              onClick={handleSendOTP}
+              onClick={handleCheckPhone}
               disabled={loading}
               className="w-full rounded-2xl bg-emerald-400 py-4 text-lg font-bold text-zinc-950 transition hover:bg-emerald-300 disabled:opacity-50"
             >
-              {loading ? '发送中...' : '获取验证码'}
+              {loading ? '检查中...' : '下一步'}
             </button>
 
             <div className="rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4">
               <p className="text-sm text-amber-200">
-                <span className="font-bold">提示：</span>验证码将通过 WhatsApp 发送。如果未收到，请检查您的 WhatsApp 消息。
+                <span className="font-bold">提示：</span>首次登录默认密码为 123456，登录后请立即修改密码。
               </p>
             </div>
           </motion.div>
@@ -150,23 +143,27 @@ export default function LoginPage() {
             className="space-y-6"
           >
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/80">6位验证码</label>
+              <label className="mb-2 block text-sm font-medium text-white/80">密码</label>
               <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                maxLength={6}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-center text-2xl tracking-[0.5em] text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="请输入密码"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-lg text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
               />
+              {isFirstLogin && (
+                <p className="mt-2 text-xs text-amber-300">
+                  首次登录，默认密码：123456
+                </p>
+              )}
             </div>
 
             <button
-              onClick={handleVerifyOTP}
-              disabled={loading || otp.length !== 6}
+              onClick={handleLogin}
+              disabled={loading || !password}
               className="w-full rounded-2xl bg-emerald-400 py-4 text-lg font-bold text-zinc-950 transition hover:bg-emerald-300 disabled:opacity-50"
             >
-              {loading ? '验证中...' : '登录'}
+              {loading ? '登录中...' : '登录'}
             </button>
 
             <div className="flex items-center justify-between">
@@ -177,11 +174,10 @@ export default function LoginPage() {
                 更换手机号
               </button>
               <button
-                onClick={handleSendOTP}
-                disabled={countdown > 0}
-                className="text-sm font-medium text-emerald-400 disabled:text-white/40"
+                onClick={() => alert('请联系管理员重置密码')}
+                className="text-sm font-medium text-emerald-400"
               >
-                {countdown > 0 ? `${countdown}秒后重发` : '重新发送'}
+                忘记密码？
               </button>
             </div>
           </motion.div>
