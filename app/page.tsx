@@ -24,11 +24,11 @@ const shareholder = {
   referral_code: 'SFD6-FP-2026',
 };
 
-function HomeScreen({ setActive, onShowQR, onShowReferralQR }: { setActive: (id: string) => void; onShowQR: () => void; onShowReferralQR: () => void }) {
+function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void; }) {
   return (
     <div className="space-y-5 pb-28">
       <Header shareholder={shareholder} onShowQR={onShowQR} />
-      
+
       <div className="px-5">
         {/* Investment Card */}
         <div className="mb-5 rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 text-white shadow-xl">
@@ -44,54 +44,30 @@ function HomeScreen({ setActive, onShowQR, onShowReferralQR }: { setActive: (id:
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <StatCard 
-            icon="wallet" 
-            label="Snow Points" 
-            value={shareholder.points_balance.toLocaleString()} 
-            sub="20% Founding Partner" 
+          <StatCard
+            icon="wallet"
+            label="Snow Points"
+            value={shareholder.points_balance.toLocaleString()}
+            sub="20% Founding Partner"
           />
-          <StatCard 
-            icon="gift" 
-            label="Weekly Points" 
-            value={shareholder.weekly_points.toString()} 
-            sub="每周自动更新" 
+          <StatCard
+            icon="gift"
+            label="Weekly Points"
+            value={shareholder.weekly_points.toString()}
+            sub="每周自动更新"
           />
-          <StatCard 
-            icon="shield" 
-            label="Shareholding" 
-            value={`${shareholder.share_percent}%`} 
-            sub={`${formatRM(shareholder.actual_investment_rm)} 注资`} 
+          <StatCard
+            icon="shield"
+            label="Shareholding"
+            value={`${shareholder.share_percent}%`}
+            sub={`${formatRM(shareholder.actual_investment_rm)} 注资`}
           />
-          <StatCard 
-            icon="ticket" 
-            label="Family Cards" 
-            value="6" 
-            sub="家属 / 商务副卡" 
+          <StatCard
+            icon="ticket"
+            label="Family Cards"
+            value="6"
+            sub="家属 / 商务副卡"
           />
-        </div>
-
-        {/* 带客消费码 */}
-        <div
-          onClick={onShowReferralQR}
-          className="mt-5 cursor-pointer rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 to-emerald-950/50 p-5 text-white shadow-xl transition hover:from-emerald-400/30 hover:to-emerald-950/60"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-emerald-400/20 p-3">
-                <Icon name="users" className="h-7 w-7 text-emerald-300" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold">带客消费码</h3>
-                <p className="text-xs text-white/60">给客人扫码，计入带客奖励</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="rounded-full bg-emerald-400/20 px-2 py-1 text-xs font-bold text-emerald-300">5分钟</span>
-              <div className="mt-2 rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-zinc-950">
-                点击生成
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Referral Code Card */}
@@ -326,7 +302,7 @@ function BenefitsScreen() {
   );
 }
 
-function ReferralScreen() {
+function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) {
   const [guestSpend, setGuestSpend] = useState(1000);
   const foodReward = calculateReferralReward(guestSpend, 0.1);
   const alcoholReward = calculateReferralReward(guestSpend, 0.04);
@@ -339,6 +315,30 @@ function ReferralScreen() {
         <p className="mt-2 text-sm text-white/50">把人脉变成消费，把消费变成股东奖励。</p>
       </div>
 
+      {/* 带客消费码卡片 */}
+      <div
+        onClick={onShowReferralQR}
+        className="cursor-pointer rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 to-emerald-950/50 p-5 text-white shadow-xl transition hover:from-emerald-400/30 hover:to-emerald-950/60"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-emerald-400/20 p-3">
+              <Icon name="users" className="h-7 w-7 text-emerald-300" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">生成带客消费码</h3>
+              <p className="text-xs text-white/60">给客人扫码，计入带客奖励</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="rounded-full bg-emerald-400/20 px-2 py-1 text-xs font-bold text-emerald-300">5分钟</span>
+            <div className="mt-2 rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-zinc-950">
+              点击生成
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Referral Code Card */}
       <div className="rounded-3xl border-none bg-white p-5 text-zinc-950 shadow-xl">
         <div className="flex items-center justify-between">
@@ -346,11 +346,9 @@ function ReferralScreen() {
             <p className="text-sm text-zinc-500">我的推荐码</p>
             <p className="mt-1 font-mono text-xl font-black">{shareholder.referral_code}</p>
           </div>
-          <Icon name="qr" className="h-12 w-12" />
+          <Icon name="share" className="h-12 w-12 text-zinc-400" />
         </div>
-        <button className="mt-5 w-full rounded-2xl bg-zinc-950 py-4 text-sm font-semibold text-white hover:bg-zinc-800">
-          分享给朋友
-        </button>
+        <p className="mt-3 text-xs text-zinc-400">分享给朋友注册时使用</p>
       </div>
 
       {/* Calculator */}
@@ -502,12 +500,11 @@ export default function App() {
           <HomeScreen
             setActive={setActive}
             onShowQR={() => setShowQR(true)}
-            onShowReferralQR={() => setShowReferralQR(true)}
           />
         )}
         {active === 'points' && <PointsScreen />}
         {active === 'benefits' && <BenefitsScreen />}
-        {active === 'referral' && <ReferralScreen />}
+        {active === 'referral' && <ReferralScreen onShowReferralQR={() => setShowReferralQR(true)} />}
         {active === 'family' && <FamilyCardsScreen />}
         <BottomNav active={active} setActive={setActive} />
 
