@@ -2,40 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
 import { Icon } from './Icon';
-import { generateQRToken, encodeQRToken, getRemainingMinutes, formatRemainingTime, type QRToken } from '@/lib/qr-code';
+import { generateQRToken, encodeQRToken, getRemainingMinutes, formatRemainingTime, getQRTypeDisplayName, type QRToken } from '@/lib/qr-code';
 
 interface QRCodeDisplayProps {
   shareholderId: number;
   shareholderName: string;
   memberNo: string;
-  type: 'self' | 'family';
+  type: 'self' | 'family' | 'referral';
   familyCard?: { id: number; name: string; relationship: string };
+  guestName?: string;
   onClose: () => void;
 }
 
-// Simple QR code SVG generator (uses external library in production)
-function SimpleQRCode({ data }: { data: string }) {
-  // For now, display as text with styling
-  // In production, use qrcode.react library
-  return (
-    <div className="flex aspect-square items-center justify-center rounded-2xl bg-white p-4">
-      <div className="text-center">
-        <div className="mb-2 text-6xl">📱</div>
-        <p className="text-xs text-zinc-400">QR Code</p>
-        <p className="mt-2 text-[10px] text-zinc-300 break-all">{data.slice(0, 50)}...</p>
-      </div>
-    </div>
-  );
-}
-
-export function QRCodeDisplay({ 
-  shareholderId, 
-  shareholderName, 
-  memberNo, 
-  type, 
-  familyCard, 
-  onClose 
+export function QRCodeDisplay({
+  shareholderId,
+  shareholderName,
+  memberNo,
+  type,
+  familyCard,
+  guestName,
+  onClose
 }: QRCodeDisplayProps) {
   const [token, setToken] = useState<QRToken | null>(null);
   const [remainingMinutes, setRemainingMinutes] = useState(0);
@@ -48,7 +36,8 @@ export function QRCodeDisplay({
       shareholderName,
       memberNo,
       type,
-      familyCard
+      familyCard,
+      guestName
     );
     setToken(newToken);
     setQrData(encodeQRToken(newToken));
@@ -94,7 +83,7 @@ export function QRCodeDisplay({
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-white">
-              {type === 'self' ? '股东消费码' : '副卡消费码'}
+              {getQRTypeDisplayName(type)}
             </h2>
             <p className="text-sm text-white/50">{shareholderName}</p>
           </div>
@@ -107,8 +96,17 @@ export function QRCodeDisplay({
         </div>
 
         {/* QR Code */}
-        <div className="mb-6">
-          <SimpleQRCode data={qrData} />
+        <div className="mb-6 flex justify-center">
+          <div className="rounded-2xl bg-white p-4">
+            <QRCodeSVG
+              value={qrData}
+              size={200}
+              level="H"
+              includeMargin={false}
+              bgColor="#ffffff"
+              fgColor="#000000"
+            />
+          </div>
         </div>
 
         {/* Info */}
@@ -117,6 +115,17 @@ export function QRCodeDisplay({
             <span className="text-sm text-white/60">会员编号</span>
             <span className="font-mono text-sm text-white">{memberNo}</span>
           </div>
+          {type === 'referral' && (
+            <>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-sm text-white/60">带客股东</span>
+                <span className="text-sm text-emerald-300">{shareholderName}</span>
+              </div>
+              <div className="mt-1 rounded-xl bg-emerald-400/10 px-3 py-2">
+                <span className="text-xs text-emerald-300">此消费将计入带客奖励</span>
+              </div>
+            </>
+          )}
           {familyCard && (
             <>
               <div className="mt-2 flex items-center justify-between">

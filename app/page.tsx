@@ -24,7 +24,7 @@ const shareholder = {
   referral_code: 'SFD6-FP-2026',
 };
 
-function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void }) {
+function HomeScreen({ setActive, onShowQR, onShowReferralQR }: { setActive: (id: string) => void; onShowQR: () => void; onShowReferralQR: () => void }) {
   return (
     <div className="space-y-5 pb-28">
       <Header shareholder={shareholder} />
@@ -70,27 +70,57 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
           />
         </div>
 
-        {/* QR Code Card */}
-        <div 
-          onClick={onShowQR}
-          className="mt-5 cursor-pointer rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl transition hover:bg-zinc-800"
-        >
+        {/* QR Code Cards */}
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          {/* 带客消费码 */}
+          <div
+            onClick={onShowReferralQR}
+            className="cursor-pointer rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 to-emerald-950/50 p-5 text-white shadow-xl transition hover:from-emerald-400/30 hover:to-emerald-950/60"
+          >
+            <div className="flex items-center justify-between">
+              <div className="rounded-2xl bg-emerald-400/20 p-2">
+                <Icon name="users" className="h-6 w-6 text-emerald-300" />
+              </div>
+              <span className="rounded-full bg-emerald-400/20 px-2 py-1 text-xs font-bold text-emerald-300">5分钟</span>
+            </div>
+            <h3 className="mt-3 text-lg font-bold">带客消费码</h3>
+            <p className="mt-1 text-xs text-white/60">给客人扫码，计入带客奖励</p>
+            <div className="mt-3 flex items-center justify-center rounded-xl bg-emerald-400 py-3 text-xs font-semibold text-zinc-950">
+              点击生成
+            </div>
+          </div>
+
+          {/* 股东自用码 */}
+          <div
+            onClick={onShowQR}
+            className="cursor-pointer rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl transition hover:bg-zinc-800"
+          >
+            <div className="flex items-center justify-between">
+              <div className="rounded-2xl bg-white/10 p-2">
+                <Icon name="qr" className="h-6 w-6 text-white" />
+              </div>
+              <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-bold text-white/60">5分钟</span>
+            </div>
+            <h3 className="mt-3 text-lg font-bold">股东自用码</h3>
+            <p className="mt-1 text-xs text-white/60">本人消费使用</p>
+            <div className="mt-3 flex items-center justify-center rounded-xl bg-amber-400 py-3 text-xs font-semibold text-zinc-950">
+              点击生成
+            </div>
+          </div>
+        </div>
+
+        {/* Referral Code Card */}
+        <div className="mt-3 rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-white/50">股东专属二维码</p>
-              <h3 className="mt-1 text-lg font-bold">带客消费 / 积分识别</h3>
+              <p className="text-sm text-white/50">推荐码</p>
+              <p className="font-mono text-lg font-bold text-emerald-300">{shareholder.referral_code}</p>
             </div>
-            <div className="rounded-2xl bg-white p-3 text-zinc-950">
-              <Icon name="qr" className="h-8 w-8" />
+            <div className="rounded-2xl bg-white/10 p-3">
+              <Icon name="share" className="h-6 w-6 text-white" />
             </div>
           </div>
-          <div className="mt-4 rounded-2xl bg-white/10 p-4">
-            <p className="text-xs text-white/50">Referral Code</p>
-            <p className="font-mono text-lg font-bold text-emerald-300">{shareholder.referral_code}</p>
-          </div>
-          <div className="mt-4 flex items-center justify-center rounded-2xl bg-amber-400 py-4 text-sm font-semibold text-zinc-950">
-            点击生成消费二维码
-          </div>
+          <p className="mt-2 text-xs text-white/40">分享给朋友注册时使用</p>
         </div>
 
         {/* Benefits Preview */}
@@ -478,17 +508,25 @@ function FamilyCardsScreen() {
 export default function App() {
   const [active, setActive] = useState('home');
   const [showQR, setShowQR] = useState(false);
+  const [showReferralQR, setShowReferralQR] = useState(false);
 
   return (
     <main className="min-h-screen bg-zinc-950 font-sans">
       <div className="mx-auto min-h-screen max-w-md overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.25),_transparent_35%),linear-gradient(180deg,#09090b_0%,#18181b_100%)] shadow-2xl">
-        {active === 'home' && <HomeScreen setActive={setActive} onShowQR={() => setShowQR(true)} />}
+        {active === 'home' && (
+          <HomeScreen
+            setActive={setActive}
+            onShowQR={() => setShowQR(true)}
+            onShowReferralQR={() => setShowReferralQR(true)}
+          />
+        )}
         {active === 'points' && <PointsScreen />}
         {active === 'benefits' && <BenefitsScreen />}
         {active === 'referral' && <ReferralScreen />}
         {active === 'family' && <FamilyCardsScreen />}
         <BottomNav active={active} setActive={setActive} />
-        
+
+        {/* 股东自用码 */}
         {showQR && (
           <QRCodeDisplay
             shareholderId={shareholder.id}
@@ -496,6 +534,17 @@ export default function App() {
             memberNo={shareholder.member_no}
             type="self"
             onClose={() => setShowQR(false)}
+          />
+        )}
+
+        {/* 带客消费码 */}
+        {showReferralQR && (
+          <QRCodeDisplay
+            shareholderId={shareholder.id}
+            shareholderName={shareholder.name}
+            memberNo={shareholder.member_no}
+            type="referral"
+            onClose={() => setShowReferralQR(false)}
           />
         )}
       </div>

@@ -7,10 +7,11 @@ export interface QRToken {
   shareholderId: number;
   shareholderName: string;
   memberNo: string;
-  type: 'self' | 'family';
+  type: 'self' | 'family' | 'referral'; // self=股东自用, family=副卡, referral=带客
   familyCardId?: number;
   familyName?: string;
   relationship?: string;
+  guestName?: string; // 带客时客人姓名（可选）
   timestamp: number;
   expiryMinutes: number;
   signature: string;
@@ -33,11 +34,13 @@ export function generateQRToken(
   shareholderId: number,
   shareholderName: string,
   memberNo: string,
-  type: 'self' | 'family' = 'self',
-  familyCard?: { id: number; name: string; relationship: string }
+  type: 'self' | 'family' | 'referral' = 'self',
+  familyCard?: { id: number; name: string; relationship: string },
+  guestName?: string
 ): QRToken {
   const timestamp = Date.now();
-  const expiryMinutes = type === 'self' ? 5 : 360; // 5 min for self, 6 hours for family
+  // expiry: self=5min, referral=5min, family=6hours
+  const expiryMinutes = type === 'family' ? 360 : 5;
 
   const tokenData: Omit<QRToken, 'signature'> = {
     shareholderId,
@@ -47,6 +50,7 @@ export function generateQRToken(
     familyCardId: familyCard?.id,
     familyName: familyCard?.name,
     relationship: familyCard?.relationship,
+    guestName,
     timestamp,
     expiryMinutes,
   };
@@ -116,4 +120,32 @@ export function formatRemainingTime(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${hours} 小时 ${mins > 0 ? mins + ' 分钟' : ''}后过期`;
+}
+
+// Get QR code type display name
+export function getQRTypeDisplayName(type: QRToken['type']): string {
+  switch (type) {
+    case 'self':
+      return '股东自用码';
+    case 'family':
+      return '副卡消费码';
+    case 'referral':
+      return '带客消费码';
+    default:
+      return '消费码';
+  }
+}
+
+// Get QR code type description
+export function getQRTypeDescription(type: QRToken['type']): string {
+  switch (type) {
+    case 'self':
+      return '股东本人消费使用';
+    case 'family':
+      return '家属副卡消费使用';
+    case 'referral':
+      return '带客消费奖励使用';
+    default:
+      return '';
+  }
 }

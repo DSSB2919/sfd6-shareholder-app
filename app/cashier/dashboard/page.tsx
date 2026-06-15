@@ -8,7 +8,7 @@ import { uploadReceipt, createRedemption, type Redemption } from '@/lib/supabase
 import { decodeQRToken, validateQRToken, type QRToken } from '@/lib/qr-code';
 
 interface ScannedData {
-  type: 'self' | 'family';
+  type: 'self' | 'family' | 'referral';
   shareholder: {
     id: number;
     name: string;
@@ -21,6 +21,7 @@ interface ScannedData {
     name: string;
     relationship: string;
   };
+  is_referral?: boolean; // 是否是带客消费
 }
 
 export default function CashierDashboard() {
@@ -75,6 +76,7 @@ export default function CashierDashboard() {
           name: mockToken.familyName || '',
           relationship: mockToken.relationship || 'child',
         } : undefined,
+        is_referral: mockToken.type === 'referral',
       });
       setScanning(false);
     }, 2000);
@@ -245,8 +247,9 @@ export default function CashierDashboard() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h3 className="font-bold text-white">使用说明</h3>
               <ul className="mt-3 space-y-2 text-sm text-white/60">
-                <li>• 股东二维码有效期为 5 分钟</li>
+                <li>• 股东自用码/带客码有效期为 5 分钟</li>
                 <li>• 副卡二维码有效期为 6 小时</li>
+                <li>• 带客消费将计入股东带客奖励</li>
                 <li>• 请确认股东身份后再进行核销</li>
                 <li>• 积分不足时将无法完成抵扣</li>
               </ul>
@@ -336,10 +339,17 @@ export default function CashierDashboard() {
             className="space-y-6"
           >
             {/* Shareholder Info */}
-            <div className="rounded-3xl border border-amber-300/30 bg-gradient-to-br from-white/15 to-amber-300/10 p-5">
+            <div className={`rounded-3xl border p-5 ${scannedData.is_referral ? 'border-emerald-400/30 bg-gradient-to-br from-emerald-400/15 to-emerald-950/30' : 'border-amber-300/30 bg-gradient-to-br from-white/15 to-amber-300/10'}`}>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs text-amber-300">{scannedData.shareholder.tier}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-amber-300">{scannedData.shareholder.tier}</p>
+                    {scannedData.is_referral && (
+                      <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-xs font-bold text-emerald-300">
+                        带客消费
+                      </span>
+                    )}
+                  </div>
                   <h2 className="mt-1 text-xl font-bold text-white">{scannedData.shareholder.name}</h2>
                   <p className="mt-1 text-sm text-white/60">{scannedData.shareholder.member_no}</p>
                 </div>
@@ -356,6 +366,11 @@ export default function CashierDashboard() {
                   {scannedData.shareholder.points_balance.toLocaleString()}
                 </span>
               </div>
+              {scannedData.is_referral && (
+                <div className="mt-3 rounded-xl bg-emerald-400/10 px-3 py-2">
+                  <p className="text-xs text-emerald-300">✓ 此消费将计入带客奖励</p>
+                </div>
+              )}
             </div>
 
             {/* Amount Inputs */}

@@ -164,6 +164,15 @@ export function Icon({ name, className = 'h-5 w-5' }: IconProps) {
         <path d="M6 6l12 12" />
       </>
     ),
+    share: (
+      <>
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <path d="M8.5 10.5l7-3" />
+        <path d="M8.5 13.5l7 3" />
+      </>
+    ),
   };
 
   return (
