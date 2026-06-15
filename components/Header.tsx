@@ -7,9 +7,10 @@ import { formatRM } from '@/lib/utils';
 
 interface HeaderProps {
   shareholder: Shareholder;
+  onShowQR?: () => void;
 }
 
-export function Header({ shareholder }: HeaderProps) {
+export function Header({ shareholder, onShowQR }: HeaderProps) {
   const tierBadge = shareholder.tier === 'Founding Partner' 
     ? 'FOUNDING PARTNER'
     : shareholder.tier.toUpperCase();
@@ -54,9 +55,20 @@ export function Header({ shareholder }: HeaderProps) {
               {shareholder.points_balance.toLocaleString()} Snow Points · Founding Circle Privilege
             </p>
           </div>
-          <div className="rounded-2xl bg-zinc-950/50 px-3 py-2 text-right">
-            <p className="text-xs text-white/50">股东编号</p>
-            <p className="text-sm font-bold text-emerald-300">{shareholder.member_no}</p>
+          <div className="flex flex-col items-end gap-2">
+            <div className="rounded-2xl bg-zinc-950/50 px-3 py-2 text-right">
+              <p className="text-xs text-white/50">股东编号</p>
+              <p className="text-sm font-bold text-emerald-300">{shareholder.member_no}</p>
+            </div>
+            {onShowQR && (
+              <button
+                onClick={onShowQR}
+                className="flex items-center gap-1.5 rounded-xl bg-amber-400 px-3 py-2 text-xs font-bold text-zinc-950 transition hover:bg-amber-300"
+              >
+                <Icon name="qr" className="h-3.5 w-3.5" />
+                消费码
+              </button>
+            )}
           </div>
         </div>
       </motion.div>

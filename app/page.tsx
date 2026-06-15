@@ -27,7 +27,7 @@ const shareholder = {
 function HomeScreen({ setActive, onShowQR, onShowReferralQR }: { setActive: (id: string) => void; onShowQR: () => void; onShowReferralQR: () => void }) {
   return (
     <div className="space-y-5 pb-28">
-      <Header shareholder={shareholder} />
+      <Header shareholder={shareholder} onShowQR={onShowQR} />
       
       <div className="px-5">
         {/* Investment Card */}
@@ -70,41 +70,26 @@ function HomeScreen({ setActive, onShowQR, onShowReferralQR }: { setActive: (id:
           />
         </div>
 
-        {/* QR Code Cards */}
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          {/* 带客消费码 */}
-          <div
-            onClick={onShowReferralQR}
-            className="cursor-pointer rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 to-emerald-950/50 p-5 text-white shadow-xl transition hover:from-emerald-400/30 hover:to-emerald-950/60"
-          >
-            <div className="flex items-center justify-between">
-              <div className="rounded-2xl bg-emerald-400/20 p-2">
-                <Icon name="users" className="h-6 w-6 text-emerald-300" />
+        {/* 带客消费码 */}
+        <div
+          onClick={onShowReferralQR}
+          className="mt-5 cursor-pointer rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 to-emerald-950/50 p-5 text-white shadow-xl transition hover:from-emerald-400/30 hover:to-emerald-950/60"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-emerald-400/20 p-3">
+                <Icon name="users" className="h-7 w-7 text-emerald-300" />
               </div>
+              <div>
+                <h3 className="text-lg font-bold">带客消费码</h3>
+                <p className="text-xs text-white/60">给客人扫码，计入带客奖励</p>
+              </div>
+            </div>
+            <div className="text-right">
               <span className="rounded-full bg-emerald-400/20 px-2 py-1 text-xs font-bold text-emerald-300">5分钟</span>
-            </div>
-            <h3 className="mt-3 text-lg font-bold">带客消费码</h3>
-            <p className="mt-1 text-xs text-white/60">给客人扫码，计入带客奖励</p>
-            <div className="mt-3 flex items-center justify-center rounded-xl bg-emerald-400 py-3 text-xs font-semibold text-zinc-950">
-              点击生成
-            </div>
-          </div>
-
-          {/* 股东自用码 */}
-          <div
-            onClick={onShowQR}
-            className="cursor-pointer rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl transition hover:bg-zinc-800"
-          >
-            <div className="flex items-center justify-between">
-              <div className="rounded-2xl bg-white/10 p-2">
-                <Icon name="qr" className="h-6 w-6 text-white" />
+              <div className="mt-2 rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-zinc-950">
+                点击生成
               </div>
-              <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-bold text-white/60">5分钟</span>
-            </div>
-            <h3 className="mt-3 text-lg font-bold">股东自用码</h3>
-            <p className="mt-1 text-xs text-white/60">本人消费使用</p>
-            <div className="mt-3 flex items-center justify-center rounded-xl bg-amber-400 py-3 text-xs font-semibold text-zinc-950">
-              点击生成
             </div>
           </div>
         </div>
