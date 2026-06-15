@@ -293,21 +293,23 @@ function BenefitsScreen() {
               }`}>
                 {isSleeping ? '本轮暂不开放，仅保留现有 Sleeping 股东权益' : tier.highlight}
               </p>
-              {!isSleeping && (
-                <div className="mt-4 grid gap-2">
-                  {tier.benefits.map((benefit) => (
-                    <div
-                      key={benefit}
-                      className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-sm ${
-                        isTopTier ? 'bg-zinc-950/10' : 'bg-white/10'
-                      }`}
-                    >
-                      <Icon name="shield" className="h-4 w-4 shrink-0" />
-                      {benefit}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="mt-4 grid gap-2">
+                {tier.benefits.map((benefit) => (
+                  <div
+                    key={benefit}
+                    className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-sm ${
+                      isTopTier
+                        ? 'bg-zinc-950/10'
+                        : isSleeping
+                          ? 'bg-white/5 text-white/40'
+                          : 'bg-white/10'
+                    }`}
+                  >
+                    <Icon name="shield" className={`h-4 w-4 shrink-0 ${isSleeping ? 'text-white/30' : ''}`} />
+                    {benefit}
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })}
