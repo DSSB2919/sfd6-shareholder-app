@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
-import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct } from '@/lib/utils';
+import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, getDeductPointsByTier } from '@/lib/utils';
 import { uploadReceipt, createRedemption, type Redemption } from '@/lib/supabase';
 import { decodeQRToken, validateQRToken, type QRToken } from '@/lib/qr-code';
 
@@ -82,10 +82,15 @@ export default function CashierDashboard() {
     }, 2000);
   };
 
-  const foodDeduct = calculateFoodDeduct(foodAmount);
-  const alcoholDeduct = calculateAlcoholDeduct(alcoholAmount);
+  // 根据股东等级计算抵扣（每RM100为单位）
+  const shareholderTier = scannedData?.shareholder.tier;
+  const foodDeduct = calculateFoodDeduct(foodAmount, shareholderTier);
+  const alcoholDeduct = calculateAlcoholDeduct(alcoholAmount, shareholderTier);
   const totalDeduct = foodDeduct + alcoholDeduct;
   const finalPay = foodAmount + alcoholAmount - totalDeduct;
+
+  // 获取抵扣规则用于显示
+  const deductPoints = shareholderTier ? getDeductPointsByTier(shareholderTier) : { food: 25, alcohol: 10 };
 
   const handleRedeem = () => {
     if (totalDeduct > (scannedData?.shareholder.points_balance || 0)) {
@@ -249,6 +254,7 @@ export default function CashierDashboard() {
               <ul className="mt-3 space-y-2 text-sm text-white/60">
                 <li>• 股东自用码/带客码有效期为 5 分钟</li>
                 <li>• 副卡二维码有效期为 6 小时</li>
+                <li>• 每RM100可抵扣对应积分，不足部分不抵扣</li>
                 <li>• 带客消费将计入股东带客奖励</li>
                 <li>• 请确认股东身份后再进行核销</li>
                 <li>• 积分不足时将无法完成抵扣</li>
@@ -380,7 +386,7 @@ export default function CashierDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-white">食物 / 无酒精</h3>
-                    <p className="text-xs text-white/50">抵扣 30%</p>
+                    <p className="text-xs text-white/50">每RM100抵扣 {deductPoints.food} 分</p>
                   </div>
                   <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-sm font-bold text-emerald-300">
                     -{foodDeduct} 分
@@ -405,7 +411,7 @@ export default function CashierDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-white">酒精饮料</h3>
-                    <p className="text-xs text-white/50">抵扣 10%</p>
+                    <p className="text-xs text-white/50">每RM100抵扣 {deductPoints.alcohol} 分</p>
                   </div>
                   <span className="rounded-full bg-amber-400/15 px-3 py-1 text-sm font-bold text-amber-300">
                     -{alcoholDeduct} 分
