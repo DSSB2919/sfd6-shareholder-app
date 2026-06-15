@@ -101,22 +101,6 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
           <p className="mt-2 text-xs text-white/40">分享给朋友注册时使用</p>
         </div>
 
-        {/* Benefits Preview */}
-        <div className="mt-5 grid gap-3">
-          {BENEFITS.slice(0, 3).map((item) => (
-            <div key={item.title} className="rounded-3xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-start gap-4">
-                <div className="rounded-2xl bg-zinc-950 p-3 text-white">
-                  <Icon name={item.icon} className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white">{item.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-white/50">{item.desc}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
