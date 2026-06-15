@@ -124,12 +124,15 @@ function PointsScreen() {
         <p className="mt-2 text-sm text-white/50">食物 / 无酒精饮料最高 30%，酒精饮料最高 10%。</p>
       </div>
 
+      {/* 股东等级和实时积分余额 */}
       <div className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white shadow-xl backdrop-blur">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-white/60">20% 股东初始积分</p>
-          <p className="text-2xl font-black text-emerald-300">192,000</p>
+          <div>
+            <p className="text-sm text-white/60">{shareholder.share_percent}% {shareholder.tier}</p>
+            <p className="text-xs text-white/40 mt-1">实时积分余额</p>
+          </div>
+          <p className="text-2xl font-black text-emerald-300">{shareholder.points_balance.toLocaleString()}</p>
         </div>
-        <p className="mt-2 text-xs text-white/40">1% = RM9,600 = 9,600 Snow Points</p>
       </div>
 
       {/* Food Input */}
