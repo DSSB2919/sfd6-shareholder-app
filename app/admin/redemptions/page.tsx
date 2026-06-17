@@ -20,6 +20,46 @@ export default function AdminRedemptions() {
 
   const loadRedemptions = async () => {
     setLoading(true);
+    
+    // 开发环境：使用 mock 数据
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const mockData: RedemptionRecord[] = [
+        {
+          id: 1,
+          shareholder_id: 1,
+          shareholder_name: 'MR. LEE WEN CHUIN',
+          member_no: 'SFD6-FP-001',
+          type: 'self',
+          food_amount: 150,
+          alcohol_amount: 80,
+          points_used: 230,
+          weekly_points_used: true,
+          status: 'verified',
+          created_at: '2026-06-17T10:30:00Z',
+          receipt_path: null,
+        },
+        {
+          id: 2,
+          shareholder_id: 2,
+          shareholder_name: 'MS. TAN MEI LING',
+          member_no: 'SFD6-CR-002',
+          type: 'referral',
+          food_amount: 200,
+          alcohol_amount: 0,
+          points_used: 200,
+          weekly_points_used: false,
+          status: 'pending',
+          created_at: '2026-06-17T14:20:00Z',
+          receipt_path: null,
+        },
+      ];
+      setRedemptions(mockData);
+      setLoading(false);
+      return;
+    }
+    
     const data = await getRedemptions();
     setRedemptions(data);
     setLoading(false);
@@ -34,6 +74,18 @@ export default function AdminRedemptions() {
   const verifiedCount = redemptions.filter(r => r.status === 'verified').length;
 
   const handleVerify = async (redemption: RedemptionRecord, status: 'verified' | 'rejected') => {
+    // 开发环境：直接操作本地状态
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      setRedemptions(redemptions.map(r =>
+        r.id === redemption.id ? { ...r, status } : r
+      ));
+      setShowDetailModal(false);
+      setSelectedRedemption(null);
+      alert(status === 'verified' ? '已标记为已核实' : '已拒绝');
+      return;
+    }
+    
     const success = await updateRedemptionStatus(redemption.id, status, 'admin');
     
     if (success) {
@@ -61,6 +113,18 @@ export default function AdminRedemptions() {
     
     const confirmed = confirm('确定要删除这张照片吗？');
     if (!confirmed) return;
+
+    // 开发环境：直接操作本地状态
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      setRedemptions(redemptions.map(r =>
+        r.id === redemption.id ? { ...r, receipt_path: null } : r
+      ));
+      setShowDetailModal(false);
+      setSelectedRedemption(null);
+      alert('照片已删除');
+      return;
+    }
 
     const success = await deleteRedemption(redemption.id, redemption.receipt_path);
 

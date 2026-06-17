@@ -37,6 +37,61 @@ export default function AdminShareholders() {
   const fetchShareholders = async () => {
     try {
       setLoading(true);
+      
+      // 开发环境：使用 mock 数据
+      const isDev = process.env.NODE_ENV === 'development';
+      if (isDev) {
+        // 模拟 API 延迟
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const mockData: Shareholder[] = [
+          {
+            id: 1,
+            member_no: 'SFD6-FP-001',
+            name: 'MR. LEE WEN CHUIN',
+            phone: '+60123456789',
+            email: 'lee@example.com',
+            share_percent: 20,
+            actual_investment_rm: 192000,
+            points_balance: 192000,
+            tier: 'Founding Partner',
+            weekly_points: 300,
+            referral_code: 'SFD6-FP-2026',
+            is_active: true,
+          },
+          {
+            id: 2,
+            member_no: 'SFD6-CR-002',
+            name: 'MS. TAN MEI LING',
+            phone: '+60129876543',
+            email: 'tan@example.com',
+            share_percent: 10,
+            actual_investment_rm: 96000,
+            points_balance: 96000,
+            tier: 'Core Shareholder',
+            weekly_points: 150,
+            referral_code: 'SFD6-CR-2026',
+            is_active: true,
+          },
+          {
+            id: 3,
+            member_no: 'SFD6-ST-003',
+            name: 'MR. WONG KAI MING',
+            phone: '+60187654321',
+            email: 'wong@example.com',
+            share_percent: 5,
+            actual_investment_rm: 48000,
+            points_balance: 48000,
+            tier: 'Strategic Shareholder',
+            weekly_points: 80,
+            referral_code: 'SFD6-ST-2026',
+            is_active: true,
+          },
+        ];
+        setShareholders(mockData);
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch('/api/shareholders'); // 获取所有股东
       if (!response.ok) {
         throw new Error('Failed to fetch shareholders');
@@ -52,43 +107,82 @@ export default function AdminShareholders() {
 
   const handleSubmit = async () => {
     try {
+      // 开发环境：直接操作本地状态
+      const isDev = process.env.NODE_ENV === 'development';
+      
       if (editingId) {
-        // Update existing - 调用 PUT /api/shareholder
-        const response = await fetch('/api/shareholder', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: editingId,
+        // Update existing
+        if (isDev) {
+          // 开发环境直接更新本地状态
+          const updatedShareholder: Shareholder = {
+            ...shareholders.find(s => s.id === editingId)!,
             ...formData,
-          }),
-        });
+            tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
+            weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
+          };
+          setShareholders(shareholders.map(s =>
+            s.id === editingId ? updatedShareholder : s
+          ));
+        } else {
+          // 生产环境调用 API
+          const response = await fetch('/api/shareholder', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: editingId,
+              ...formData,
+            }),
+          });
 
-        if (!response.ok) {
-          const error = await response.json();
-          alert(error.error || '更新失败');
-          return;
+          if (!response.ok) {
+            const error = await response.json();
+            alert(error.error || '更新失败');
+            return;
+          }
+
+          const updatedShareholder = await response.json();
+          setShareholders(shareholders.map(s =>
+            s.id === editingId ? updatedShareholder : s
+          ));
         }
-
-        const updatedShareholder = await response.json();
-        setShareholders(shareholders.map(s =>
-          s.id === editingId ? updatedShareholder : s
-        ));
       } else {
-        // Add new - 调用 POST /api/shareholders
-        const response = await fetch('/api/shareholders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
+        // Add new
+        if (isDev) {
+          // 开发环境直接添加到本地状态
+          const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
+          const memberNo = generateMemberNo(formData.share_percent, newId);
+          const newShareholder: Shareholder = {
+            id: newId,
+            member_no: memberNo,
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            share_percent: formData.share_percent,
+            actual_investment_rm: formData.actual_investment_rm,
+            points_balance: formData.points_balance,
+            tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
+            weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
+            referral_code: generateReferralCode(memberNo),
+            is_active: true,
+          };
+          setShareholders([newShareholder, ...shareholders]);
+        } else {
+          // 生产环境调用 API
+          const response = await fetch('/api/shareholders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
 
-        if (!response.ok) {
-          const error = await response.json();
-          alert(error.error || '添加失败');
-          return;
+          if (!response.ok) {
+            const error = await response.json();
+            alert(error.error || '添加失败');
+            return;
+          }
+
+          const newShareholder = await response.json();
+          setShareholders([newShareholder, ...shareholders]);
         }
-
-        const newShareholder = await response.json();
-        setShareholders([newShareholder, ...shareholders]);
       }
       closeModal();
     } catch (err) {
