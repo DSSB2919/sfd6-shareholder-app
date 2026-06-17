@@ -7,6 +7,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { StatCard } from '@/components/StatCard';
 import { Icon } from '@/components/Icon';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
+import { NetworkStatus } from '@/components/NetworkStatus';
 import { BENEFITS, TIERS, ACTIVITY_REWARDS } from '@/types';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward, getDeductPointsByTier } from '@/lib/utils';
 import { ShareholderProvider, useShareholder } from './context/ShareholderContext';
@@ -87,6 +88,12 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
           <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
           <p className="text-white">加载失败</p>
           <p className="mt-2 text-sm text-white/60">{shareholderError || '无法获取股东信息'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
@@ -204,6 +211,12 @@ function PointsScreen() {
           <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
           <p className="text-white">加载失败</p>
           <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
@@ -471,6 +484,12 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
           <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
           <p className="text-white">加载失败</p>
           <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
@@ -651,6 +670,12 @@ function SettingsScreen() {
           <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
           <p className="text-white">加载失败</p>
           <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
@@ -794,6 +819,12 @@ function FamilyQRScreen() {
           <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
           <p className="text-white">加载失败</p>
           <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+          >
+            重新加载
+          </button>
         </div>
       </div>
     );
@@ -870,6 +901,7 @@ function AppContent() {
 
   return (
     <>
+      <NetworkStatus />
       {active === 'home' && (
         <HomeScreen
           setActive={setActive}
