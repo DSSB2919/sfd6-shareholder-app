@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, getDeductPointsByTier } from '@/lib/utils';
-import { uploadReceipt, createRedemption, type Redemption } from '@/lib/supabase';
+import { uploadReceipt, createRedemption, type RedemptionRecord } from '@/lib/supabase';
 import { decodeQRToken, validateQRToken, type QRToken } from '@/lib/qr-code';
 
 interface ScannedData {
@@ -191,6 +191,27 @@ export default function CashierDashboard() {
     const result = await createRedemption(redemptionData);
 
     if (result) {
+      // 标记本周积分已使用
+      try {
+        const weeklyPointsResponse = await fetch('/api/weekly-points', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shareholder_id: scannedData.shareholder.id,
+            redemption_id: result.id,
+          }),
+        });
+
+        if (!weeklyPointsResponse.ok) {
+          const errorData = await weeklyPointsResponse.json();
+          console.warn('Weekly points update warning:', errorData);
+          // 即使积分标记失败，核销仍然成功，只是记录警告
+        }
+      } catch (error) {
+        console.error('Failed to update weekly points:', error);
+        // 不影响核销成功提示
+      }
+
       alert('核销成功！');
       setScannedData(null);
       setFoodAmount(0);

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { type Redemption } from '@/types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ffgfzvnoyyvfmhuorzcw.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2Z6dm5veXl2Zm1odW9yemN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzA5OTAsImV4cCI6MjA5NjkwNjk5MH0.8JyBqa2HGiOrF2CxsPJYuM_rdXcUlxFGD_aHqluOwTE';
@@ -12,6 +13,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Storage bucket name for receipts
 export const RECEIPTS_BUCKET = 'receipts';
+
+// Extended Redemption type for Supabase (includes DB-specific fields)
+export interface RedemptionRecord {
+  id: string;
+  shareholder_id: number;
+  shareholder_name: string;
+  shareholder_member_no: string;
+  food_amount: number;
+  alcohol_amount: number;
+  total_deduct: number;
+  final_pay: number;
+  receipt_url: string | null;
+  receipt_path: string | null;
+  status: 'pending' | 'verified' | 'rejected';
+  created_at: string;
+  verified_at: string | null;
+  verified_by: string | null;
+}
 
 // Upload receipt image to Supabase Storage
 export async function uploadReceipt(file: File, redemptionId: string): Promise<string | null> {
@@ -63,26 +82,8 @@ export async function deleteReceipt(filePath: string): Promise<boolean> {
   }
 }
 
-// Redemption types
-export interface Redemption {
-  id: string;
-  shareholder_id: number;
-  shareholder_name: string;
-  shareholder_member_no: string;
-  food_amount: number;
-  alcohol_amount: number;
-  total_deduct: number;
-  final_pay: number;
-  receipt_url: string | null;
-  receipt_path: string | null;
-  status: 'pending' | 'verified' | 'rejected';
-  created_at: string;
-  verified_at: string | null;
-  verified_by: string | null;
-}
-
 // Create redemption record
-export async function createRedemption(data: Omit<Redemption, 'id' | 'created_at' | 'verified_at' | 'verified_by'>): Promise<Redemption | null> {
+export async function createRedemption(data: Omit<RedemptionRecord, 'id' | 'created_at' | 'verified_at' | 'verified_by'>): Promise<RedemptionRecord | null> {
   try {
     const { data: result, error } = await supabase
       .from('redemptions')
@@ -98,7 +99,7 @@ export async function createRedemption(data: Omit<Redemption, 'id' | 'created_at
       return null;
     }
 
-    return result as Redemption;
+    return result as RedemptionRecord;
   } catch (error) {
     console.error('Create redemption failed:', error);
     return null;
@@ -106,7 +107,7 @@ export async function createRedemption(data: Omit<Redemption, 'id' | 'created_at
 }
 
 // Get all redemptions
-export async function getRedemptions(): Promise<Redemption[]> {
+export async function getRedemptions(): Promise<RedemptionRecord[]> {
   try {
     const { data, error } = await supabase
       .from('redemptions')
@@ -118,7 +119,7 @@ export async function getRedemptions(): Promise<Redemption[]> {
       return [];
     }
 
-    return data as Redemption[];
+    return data as RedemptionRecord[];
   } catch (error) {
     console.error('Get redemptions failed:', error);
     return [];
@@ -180,7 +181,7 @@ export async function deleteRedemption(id: string, receiptPath: string | null): 
 }
 
 // Get old redemptions for cleanup (older than 2 days)
-export async function getOldRedemptions(days: number = 2): Promise<Redemption[]> {
+export async function getOldRedemptions(days: number = 2): Promise<RedemptionRecord[]> {
   try {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -195,7 +196,7 @@ export async function getOldRedemptions(days: number = 2): Promise<Redemption[]>
       return [];
     }
 
-    return data as Redemption[];
+    return data as RedemptionRecord[];
   } catch (error) {
     console.error('Get old redemptions failed:', error);
     return [];

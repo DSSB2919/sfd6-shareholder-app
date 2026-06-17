@@ -11,11 +11,13 @@ Snowy Fox District Six Entertainment 股东专属应用
 - 🎁 股东权益展示
 - 👥 带客奖励计算
 - 🎫 副卡二维码生成
+- ✅ **Weekly Points 实时状态** - 显示本周积分可用/已用状态
 
 ### Cashier端
 - 📷 扫码核销
 - 🧾 核销记录查询
 - 📊 日报表导出
+- ✅ **自动标记积分使用** - 核销后自动更新股东积分状态
 
 ### 管理后台
 - 👤 股东管理（添加/编辑）
@@ -26,8 +28,19 @@ Snowy Fox District Six Entertainment 股东专属应用
 - Next.js 14 + TypeScript
 - Tailwind CSS
 - Framer Motion
-- SQLite (better-sqlite3)
+- Supabase (PostgreSQL + Storage)
 - JWT认证
+
+## 数据库表结构
+
+### weekly_points_usage
+记录每位股东每周积分使用状态
+- `shareholder_id` - 股东ID
+- `year` - ISO年份
+- `week_number` - ISO周数(1-53)
+- `used` - 本周是否已使用
+- `used_at` - 使用时间
+- `redemption_id` - 关联核销记录
 
 ## 快速开始
 

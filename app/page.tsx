@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
@@ -9,20 +9,17 @@ import { Icon } from '@/components/Icon';
 import { QRCodeDisplay } from '@/components/QRCodeDisplay';
 import { BENEFITS, TIERS, ACTIVITY_REWARDS } from '@/types';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward, getDeductPointsByTier } from '@/lib/utils';
+import { ShareholderProvider, useShareholder } from './context/ShareholderContext';
 
-// Mock shareholder data - replace with API call
-const shareholder = {
-  id: 1,
-  member_no: 'SFD6-FP-001',
-  name: 'MR. LEE WEN CHUIN',
-  phone: '+60123456789',
-  share_percent: 20,
-  actual_investment_rm: 192000,
-  points_balance: 192000,
-  tier: 'Founding Partner' as const,
-  weekly_points: 300,
-  referral_code: 'SFD6-FP-2026',
-};
+// Weekly Points 状态类型
+interface WeeklyPointsStatus {
+  shareholder_id: number;
+  year: number;
+  week_number: number;
+  used: boolean;
+  used_at?: string;
+  week_range: { start: string; end: string };
+}
 
 // 获取本周日期范围
 function getWeekRange(): string {
@@ -40,7 +37,60 @@ function getWeekRange(): string {
 
 function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void; }) {
   const weekRange = getWeekRange();
-  const weeklyUsed = false; // TODO: 从API获取实际使用状态
+  const { shareholder, loading: loadingShareholder, error: shareholderError } = useShareholder();
+  const [weeklyPoints, setWeeklyPoints] = useState<WeeklyPointsStatus | null>(null);
+  const [loadingWeeklyPoints, setLoadingWeeklyPoints] = useState(true);
+
+  // 获取本周积分使用状态
+  useEffect(() => {
+    if (!shareholder) return;
+
+    const fetchWeeklyPoints = async () => {
+      try {
+        const response = await fetch(`/api/weekly-points?shareholder_id=${shareholder.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setWeeklyPoints(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch weekly points:', error);
+      } finally {
+        setLoadingWeeklyPoints(false);
+      }
+    };
+
+    fetchWeeklyPoints();
+    // 每 30 秒刷新一次状态
+    const interval = setInterval(fetchWeeklyPoints, 30000);
+    return () => clearInterval(interval);
+  }, [shareholder]);
+
+  const weeklyUsed = weeklyPoints?.used ?? false;
+
+  // 加载中状态
+  if (loadingShareholder) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+          <p className="text-white/60">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 错误状态
+  if (shareholderError || !shareholder) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-5">
+        <div className="text-center">
+          <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
+          <p className="text-white">加载失败</p>
+          <p className="mt-2 text-sm text-white/60">{shareholderError || '无法获取股东信息'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 pb-28">
@@ -69,21 +119,46 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
             <div>
               <div className="flex items-center gap-2">
                 <Icon name="gift" className="h-5 w-5 text-amber-300" />
-                <span className="text-sm text-amber-300">Weekly Points</span>
+                <span className="text-sm text-amber-300">本周抵扣额度</span>
               </div>
-              <h3 className="mt-2 text-3xl font-black">{shareholder.weekly_points.toLocaleString()}</h3>
               <p className="mt-1 text-sm text-white/60">{weekRange}</p>
             </div>
             <div className="rounded-full bg-amber-400/20 px-3 py-1">
-              <span className={`text-xs font-bold ${weeklyUsed ? 'text-white/50' : 'text-amber-300'}`}>
-                {weeklyUsed ? '已使用' : '未使用'}
-              </span>
+              {loadingWeeklyPoints ? (
+                <span className="text-xs font-bold text-white/50">加载中...</span>
+              ) : (
+                <span className={`text-xs font-bold ${weeklyUsed ? 'text-white/50' : 'text-emerald-300'}`}>
+                  {weeklyUsed ? '本周已用完' : '本周可用'}
+                </span>
+              )}
             </div>
           </div>
+
+          {/* 显示剩余/已用额度 */}
+          <div className="mt-4">
+            {loadingWeeklyPoints ? (
+              <div className="h-12 animate-pulse rounded-2xl bg-white/10" />
+            ) : weeklyUsed ? (
+              <div className="flex items-center justify-between rounded-2xl bg-zinc-950/50 px-4 py-3">
+                <span className="text-sm text-white/60">本周已抵扣</span>
+                <span className="text-2xl font-black text-white/50">
+                  {shareholder.weekly_points.toLocaleString()} 分
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between rounded-2xl bg-emerald-400/20 px-4 py-3">
+                <span className="text-sm text-emerald-200">本周剩余可用</span>
+                <span className="text-2xl font-black text-emerald-300">
+                  {shareholder.weekly_points.toLocaleString()} 分
+                </span>
+              </div>
+            )}
+          </div>
+
           <div className="mt-4 space-y-2 rounded-2xl bg-zinc-950/50 p-4 text-xs text-white/60">
-            <p>• 每周限用一次</p>
-            <p>• 消费超过补差价，消费少于不退款</p>
-            <p>• 每周一自动重置</p>
+            <p>• 每周限用一次，用完即止</p>
+            <p>• 消费超过额度需补差价，消费少于额度不退款</p>
+            <p>• 每周一自动重置额度</p>
           </div>
         </div>
 
@@ -107,8 +182,32 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
 }
 
 function PointsScreen() {
+  const { shareholder, loading, error } = useShareholder();
   const [foodAmount, setFoodAmount] = useState(100);
   const [alcoholAmount, setAlcoholAmount] = useState(100);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+          <p className="text-white/60">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !shareholder) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-5">
+        <div className="text-center">
+          <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
+          <p className="text-white">加载失败</p>
+          <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+        </div>
+      </div>
+    );
+  }
 
   // 根据股东等级获取抵扣规则
   const deductPoints = getDeductPointsByTier(shareholder.tier);
@@ -221,9 +320,6 @@ function PointsScreen() {
             <span className="text-xl font-black">{formatRM(finalPay)}</span>
           </div>
         </div>
-        <button className="mt-5 w-full rounded-2xl bg-zinc-950 py-4 text-sm font-semibold text-white hover:bg-zinc-800">
-          生成抵扣二维码
-        </button>
       </div>
     </div>
   );
@@ -352,9 +448,33 @@ function BenefitsScreen() {
 }
 
 function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) {
+  const { shareholder, loading, error } = useShareholder();
   const [guestSpend, setGuestSpend] = useState(1000);
   const foodReward = calculateReferralReward(guestSpend, 0.1);
   const alcoholReward = calculateReferralReward(guestSpend, 0.04);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+          <p className="text-white/60">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !shareholder) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-5">
+        <div className="text-center">
+          <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
+          <p className="text-white">加载失败</p>
+          <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 px-5 pb-28 pt-8 text-white">
@@ -454,11 +574,13 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
 }
 
 function SettingsScreen() {
+  const { shareholder, loading: shareholderLoading, error } = useShareholder();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleChangePassword = async () => {
     if (!currentPassword) {
@@ -479,20 +601,66 @@ function SettingsScreen() {
     }
 
     setLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    setErrorMsg(null);
 
-    setLoading(false);
-    setSuccess(true);
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    try {
+      const response = await fetch('/api/shareholder/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shareholder_id: shareholder?.id,
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      });
 
-    setTimeout(() => setSuccess(false), 3000);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMsg(data.error || '密码修改失败');
+        return;
+      }
+
+      setSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setErrorMsg('网络错误，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (shareholderLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+          <p className="text-white/60">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !shareholder) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-5">
+        <div className="text-center">
+          <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
+          <p className="text-white">加载失败</p>
+          <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { logout } = useShareholder();
 
   const handleLogout = () => {
     if (confirm('确定要退出登录吗？')) {
-      window.location.href = '/login';
+      logout();
     }
   };
 
@@ -515,6 +683,16 @@ function SettingsScreen() {
             className="mt-4 rounded-xl bg-emerald-400/20 p-3 text-center"
           >
             <p className="text-sm font-bold text-emerald-300">✓ 密码修改成功</p>
+          </motion.div>
+        )}
+
+        {errorMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-xl bg-red-400/20 p-3 text-center"
+          >
+            <p className="text-sm font-bold text-red-300">✗ {errorMsg}</p>
           </motion.div>
         )}
 
@@ -594,131 +772,148 @@ function SettingsScreen() {
   );
 }
 
-function FamilyCardsScreen() {
-  const [showFamilyQR, setShowFamilyQR] = useState<{ show: boolean; index: number } | null>(null);
+function FamilyQRScreen() {
+  const { shareholder, loading, error } = useShareholder();
+  const [showFamilyQR, setShowFamilyQR] = useState(false);
 
-  const familyCards = [
-    { id: 1, name: '李太太', relationship: 'spouse' as const },
-    { id: 2, name: '李小明', relationship: 'child' as const },
-  ];
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+          <p className="text-white/60">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !shareholder) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-5">
+        <div className="text-center">
+          <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
+          <p className="text-white">加载失败</p>
+          <p className="mt-2 text-sm text-white/60">{error || '无法获取股东信息'}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 px-5 pb-28 pt-8 text-white">
       <div>
-        <p className="text-sm uppercase tracking-[0.25em] text-amber-300">Family Cards</p>
-        <h2 className="mt-1 text-3xl font-black">家属副卡管理</h2>
-        <p className="mt-2 text-sm text-white/50">为配偶和子女生成消费二维码，积分从主卡扣除。</p>
+        <p className="text-sm uppercase tracking-[0.25em] text-amber-300">Family QR</p>
+        <h2 className="mt-1 text-3xl font-black">家属消费码</h2>
+        <p className="mt-2 text-sm text-white/50">生成二维码截图发给家属，扫码消费积分从主卡扣除。</p>
       </div>
 
-      {/* Family Cards List */}
-      <div className="space-y-4">
-        {familyCards.map((card, index) => (
-          <div key={card.id} className="rounded-3xl border border-white/10 bg-white/10 p-5 text-white shadow-xl">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-emerald-400/20 px-2 py-1 text-xs font-bold text-emerald-300">
-                    {card.relationship === 'spouse' ? '配偶' : '子女'}
-                  </span>
-                  <span className="text-xs text-white/50">{shareholder.member_no}-{String.fromCharCode(65 + index)}</span>
-                </div>
-                <h3 className="mt-2 text-xl font-bold">{card.name}</h3>
-                <p className="mt-1 text-sm text-white/50">关联主股东：{shareholder.name}</p>
-              </div>
-              <div className="rounded-2xl bg-white/10 p-3">
-                <Icon name="ticket" className="h-6 w-6 text-amber-300" />
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-zinc-950/50 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-white/50">二维码有效期</p>
-                  <p className="text-sm font-semibold text-emerald-300">6 小时</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-white/50">状态</p>
-                  <p className="text-sm font-semibold text-emerald-300">有效</p>
-                </div>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setShowFamilyQR({ show: true, index })}
-              className="mt-4 w-full rounded-2xl bg-emerald-400 py-4 text-sm font-semibold text-zinc-950 hover:bg-emerald-300"
-            >
-              生成/刷新二维码
-            </button>
+      {/* Generate Family QR Card */}
+      <div className="rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-400/20 to-emerald-950/50 p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="rounded-2xl bg-emerald-400/20 p-4">
+            <Icon name="users" className="h-8 w-8 text-emerald-300" />
           </div>
-        ))}
+          <div>
+            <h3 className="text-lg font-bold">家属消费二维码</h3>
+            <p className="text-sm text-white/60">有效期 6 小时</p>
+          </div>
+        </div>
+        
+        <div className="mt-5 rounded-2xl bg-zinc-950/50 p-4">
+          <ul className="space-y-2 text-sm text-white/70">
+            <li>• 截图发给家属</li>
+            <li>• Cashier 扫码核销</li>
+            <li>• 消费积分从主卡扣除</li>
+            <li>• 不占用 Weekly Points 额度</li>
+          </ul>
+        </div>
+
+        <button 
+          onClick={() => setShowFamilyQR(true)}
+          className="mt-5 w-full rounded-2xl bg-emerald-400 py-4 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+        >
+          生成家属消费码
+        </button>
       </div>
 
-      {showFamilyQR?.show && (
+      {/* Family QR Display */}
+      {showFamilyQR && (
         <QRCodeDisplay
           shareholderId={shareholder.id}
           shareholderName={shareholder.name}
           memberNo={shareholder.member_no}
           type="family"
-          familyCard={familyCards[showFamilyQR.index]}
-          onClose={() => setShowFamilyQR(null)}
+          onClose={() => setShowFamilyQR(false)}
         />
       )}
 
-      {/* Info Card */}
+      {/* Usage Tips */}
       <div className="rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white">
-        <h3 className="font-bold">副卡使用说明</h3>
+        <h3 className="font-bold">使用提示</h3>
         <ul className="mt-3 space-y-2 text-sm text-white/60">
-          <li>• 每张副卡需要主股东实时生成二维码</li>
-          <li>• 二维码有效期为 6 小时</li>
-          <li>• 副卡消费积分从主卡余额扣除</li>
-          <li>• 每位股东最多 2 张副卡</li>
+          <li>• 每位股东最多可为 2 位家属生成消费码</li>
+          <li>• 家属消费不享受 Weekly Points 抵扣</li>
+          <li>• 积分直接从主卡 Snow Points 扣除</li>
+          <li>• 截图后请尽快使用，6 小时后失效</li>
         </ul>
       </div>
     </div>
   );
 }
 
-export default function App() {
+// 内部 App 组件，使用 shareholder context
+function AppContent() {
   const [active, setActive] = useState('home');
   const [showQR, setShowQR] = useState(false);
   const [showReferralQR, setShowReferralQR] = useState(false);
+  const { shareholder, loading } = useShareholder();
 
+  return (
+    <>
+      {active === 'home' && (
+        <HomeScreen
+          setActive={setActive}
+          onShowQR={() => setShowQR(true)}
+        />
+      )}
+      {active === 'points' && <PointsScreen />}
+      {active === 'benefits' && <BenefitsScreen />}
+      {active === 'referral' && <ReferralScreen onShowReferralQR={() => setShowReferralQR(true)} />}
+      {active === 'settings' && <SettingsScreen />}
+      <BottomNav active={active} setActive={setActive} />
+
+      {/* 股东自用码 */}
+      {showQR && shareholder && (
+        <QRCodeDisplay
+          shareholderId={shareholder.id}
+          shareholderName={shareholder.name}
+          memberNo={shareholder.member_no}
+          type="self"
+          onClose={() => setShowQR(false)}
+        />
+      )}
+
+      {/* 带客消费码 */}
+      {showReferralQR && shareholder && (
+        <QRCodeDisplay
+          shareholderId={shareholder.id}
+          shareholderName={shareholder.name}
+          memberNo={shareholder.member_no}
+          type="referral"
+          onClose={() => setShowReferralQR(false)}
+        />
+      )}
+    </>
+  );
+}
+
+export default function App() {
   return (
     <main className="min-h-screen bg-zinc-950 font-sans">
       <div className="mx-auto min-h-screen max-w-md overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.25),_transparent_35%),linear-gradient(180deg,#09090b_0%,#18181b_100%)] shadow-2xl">
-        {active === 'home' && (
-          <HomeScreen
-            setActive={setActive}
-            onShowQR={() => setShowQR(true)}
-          />
-        )}
-        {active === 'points' && <PointsScreen />}
-        {active === 'benefits' && <BenefitsScreen />}
-        {active === 'referral' && <ReferralScreen onShowReferralQR={() => setShowReferralQR(true)} />}
-        {active === 'settings' && <SettingsScreen />}
-        <BottomNav active={active} setActive={setActive} />
-
-        {/* 股东自用码 */}
-        {showQR && (
-          <QRCodeDisplay
-            shareholderId={shareholder.id}
-            shareholderName={shareholder.name}
-            memberNo={shareholder.member_no}
-            type="self"
-            onClose={() => setShowQR(false)}
-          />
-        )}
-
-        {/* 带客消费码 */}
-        {showReferralQR && (
-          <QRCodeDisplay
-            shareholderId={shareholder.id}
-            shareholderName={shareholder.name}
-            memberNo={shareholder.member_no}
-            type="referral"
-            onClose={() => setShowReferralQR(false)}
-          />
-        )}
+        <ShareholderProvider>
+          <AppContent />
+        </ShareholderProvider>
       </div>
     </main>
   );

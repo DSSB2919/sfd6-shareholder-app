@@ -4,15 +4,13 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM } from '@/lib/utils';
-import { supabase, RECEIPTS_BUCKET, getRedemptions, updateRedemptionStatus, deleteRedemption, type Redemption } from '@/lib/supabase';
-
-
+import { supabase, RECEIPTS_BUCKET, getRedemptions, updateRedemptionStatus, deleteRedemption, type RedemptionRecord } from '@/lib/supabase';
 
 export default function AdminRedemptions() {
-  const [redemptions, setRedemptions] = useState<Redemption[]>([]);
+  const [redemptions, setRedemptions] = useState<RedemptionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'verified'>('all');
-  const [selectedRedemption, setSelectedRedemption] = useState<Redemption | null>(null);
+  const [selectedRedemption, setSelectedRedemption] = useState<RedemptionRecord | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Fetch from database
@@ -35,7 +33,7 @@ export default function AdminRedemptions() {
   const pendingCount = redemptions.filter(r => r.status === 'pending').length;
   const verifiedCount = redemptions.filter(r => r.status === 'verified').length;
 
-  const handleVerify = async (redemption: Redemption, status: 'verified' | 'rejected') => {
+  const handleVerify = async (redemption: RedemptionRecord, status: 'verified' | 'rejected') => {
     const success = await updateRedemptionStatus(redemption.id, status, 'admin');
     
     if (success) {
@@ -58,7 +56,7 @@ export default function AdminRedemptions() {
     }
   };
 
-  const handleDeleteReceipt = async (redemption: Redemption) => {
+  const handleDeleteReceipt = async (redemption: RedemptionRecord) => {
     if (!redemption.receipt_path) return;
     
     const confirmed = confirm('确定要删除这张照片吗？');
