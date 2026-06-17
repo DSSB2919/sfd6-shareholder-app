@@ -487,8 +487,26 @@ function BenefitsScreen() {
 function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) {
   const { shareholder, loading, error } = useShareholder();
   const [guestSpend, setGuestSpend] = useState(1000);
-  const foodReward = calculateReferralReward(guestSpend, 0.1);
-  const alcoholReward = calculateReferralReward(guestSpend, 0.04);
+
+  // 根据股东等级获取带客奖励比例
+  const getReferralRates = (tier: string) => {
+    switch (tier) {
+      case 'Founding Partner':
+        return { food: 0.10, alcohol: 0.04, label: '10% / 4%' };
+      case 'Core Shareholder':
+        return { food: 0.08, alcohol: 0.03, label: '8% / 3%' };
+      case 'Strategic Shareholder':
+        return { food: 0.08, alcohol: 0.03, label: '8% / 3%' };
+      case 'Lifestyle Shareholder':
+        return { food: 0.06, alcohol: 0.025, label: '6% / 2.5%' };
+      default: // Support Shareholder
+        return { food: 0.05, alcohol: 0.02, label: '5% / 2%' };
+    }
+  };
+
+  const rates = shareholder ? getReferralRates(shareholder.tier) : { food: 0.10, alcohol: 0.04, label: '10% / 4%' };
+  const foodReward = calculateReferralReward(guestSpend, rates.food);
+  const alcoholReward = calculateReferralReward(guestSpend, rates.alcohol);
 
   if (loading) {
     return (
@@ -565,8 +583,8 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
 
       {/* Calculator */}
       <div className="rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white shadow-xl">
-        <h3 className="text-lg font-black">Founding Partner 带客收益试算</h3>
-        <p className="mt-1 text-sm text-white/50">假设朋友消费金额：</p>
+        <h3 className="text-lg font-black">{shareholder.tier} 带客收益试算</h3>
+        <p className="mt-1 text-sm text-white/50">您的带客奖励比例：食物 {rates.label}</p>
         <div className="mt-4 flex items-center gap-3">
           <button
             type="button"
@@ -597,11 +615,11 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
 
         <div className="mt-5 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white/10 p-4">
-            <p className="text-xs text-white/50">食物奖励 10%</p>
+            <p className="text-xs text-white/50">食物奖励 {(rates.food * 100).toFixed(rates.food % 1 === 0 ? 0 : 1)}%</p>
             <p className="mt-1 text-2xl font-black text-emerald-300">{foodReward} 分</p>
           </div>
           <div className="rounded-2xl bg-white/10 p-4">
-            <p className="text-xs text-white/50">酒精奖励 4%</p>
+            <p className="text-xs text-white/50">酒精奖励 {(rates.alcohol * 100).toFixed(rates.alcohol % 1 === 0 ? 0 : 1)}%</p>
             <p className="mt-1 text-2xl font-black text-amber-300">{alcoholReward} 分</p>
           </div>
         </div>
