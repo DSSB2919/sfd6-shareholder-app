@@ -87,23 +87,7 @@ export interface QRCodeData {
 }
 
 export const TIERS: TierInfo[] = [
-  {
-    name: 'Support Shareholder',
-    share: '1%',
-    investment: 'RM9,600',
-    points: '9,600',
-    weekly: '30 / week',
-    tag: '入门股东',
-    highlight: '适合想先参与雪山飞狐生态的小额投资人',
-    benefits: [
-      '9,600 Snow Points 本金消费积分',
-      '每周 30 分股东消费额度',
-      '1 张家属副卡',
-      '普通节日优先订位',
-      '股东日参与权',
-      '带客食物 5% 奖励 / 酒精 2% 奖励',
-    ],
-  },
+
   {
     name: 'Lifestyle Shareholder',
     share: '3%',
@@ -115,7 +99,7 @@ export const TIERS: TierInfo[] = [
     benefits: [
       '28,800 Snow Points 本金消费积分',
       '每周 50 分股东消费额度',
-      '2 张家属副卡',
+      '2 张家属副卡（本轮暂不开放）',
       '大节日优先订位',
       '每月 1 次 VIP 桌优先申请',
       '带客食物 6% 奖励 / 酒精 2.5% 奖励',
@@ -132,7 +116,7 @@ export const TIERS: TierInfo[] = [
     benefits: [
       '48,000 Snow Points 本金消费积分',
       '每周 80 分股东消费额度',
-      '3 张家属副卡',
+      '2 张家属副卡',
       '大节日免 Deposit 订位',
       '酒精私人采购协助',
       '每年 1 次场地费 50% 优惠',
@@ -151,7 +135,7 @@ export const TIERS: TierInfo[] = [
     benefits: [
       '96,000 Snow Points 本金消费积分',
       '每周 150 分股东消费额度',
-      '4 张家属副卡',
+      '2 张家属副卡',
       '大节日免 Deposit + VIP 桌优先权',
       '每年 1 次私人活动场地费豁免',
       '商务招待额度 RM500 / 月',
@@ -172,7 +156,7 @@ export const TIERS: TierInfo[] = [
     benefits: [
       '192,000+ Snow Points 本金消费积分',
       '每周 300 分股东消费额度',
-      '6 张家属 / 商务副卡',
+      '2 张家属副卡',
       '全年重大节日免 Deposit',
       '优先 VIP 桌 / 黄金席位保留权',
       '每年 2 次私人活动场地费豁免',
