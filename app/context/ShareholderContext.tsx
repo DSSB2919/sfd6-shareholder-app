@@ -39,28 +39,6 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // 开发环境：如果没有缓存，使用 mock 数据
-      const isDev = process.env.NODE_ENV === 'development';
-      if (isDev && !hasCache) {
-        const mockShareholder = {
-          id: 1,
-          member_no: 'SFD6-FP-001',
-          name: 'MR. LEE WEN CHUIN',
-          phone: '+60123456789',
-          email: 'lee@example.com',
-          share_percent: 20,
-          actual_investment_rm: 192000,
-          points_balance: 192000,
-          tier: 'Founding Partner',
-          weekly_points: 300,
-          referral_code: 'SFD6-FP-2026',
-        };
-        setShareholder(mockShareholder);
-        localStorage.setItem('shareholder', JSON.stringify(mockShareholder));
-        setLoading(false);
-        return;
-      }
-
       // 从 API 获取最新数据（总是执行，确保数据同步）
       const response = await fetch('/api/shareholder');
       if (!response.ok) {

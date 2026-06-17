@@ -1,7 +1,13 @@
 // QR Code generation and validation utilities
 // Uses simple HMAC-like signature for token validation
 
-const SECRET_KEY = 'sfd6-qr-secret-2026'; // In production, use env variable
+// Get secret from environment variable (server-side) or fallback (client-side warning)
+const SECRET_KEY = process.env.QR_SECRET_KEY || 'sfd6-qr-secret-2026-fallback';
+
+// Warning if using fallback
+if (typeof window !== 'undefined' && SECRET_KEY.includes('fallback')) {
+  console.warn('⚠️ QR_SECRET_KEY not set, using fallback. Set QR_SECRET_KEY in production!');
+}
 
 export interface QRToken {
   shareholderId: number;

@@ -11,6 +11,7 @@ import { NetworkStatus } from '@/components/NetworkStatus';
 import { BENEFITS, TIERS, ACTIVITY_REWARDS } from '@/types';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward, getDeductPointsByTier } from '@/lib/utils';
 import { ShareholderProvider, useShareholder } from './context/ShareholderContext';
+import { AuthGuard } from '@/components/AuthGuard';
 
 // Weekly Points 状态类型
 interface WeeklyPointsStatus {
@@ -987,7 +988,9 @@ export default function App() {
     <main className="min-h-screen bg-zinc-950 font-sans">
       <div className="mx-auto min-h-screen max-w-md overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.25),_transparent_35%),linear-gradient(180deg,#09090b_0%,#18181b_100%)] shadow-2xl">
         <ShareholderProvider>
-          <AppContent />
+          <AuthGuard>
+            <AppContent />
+          </AuthGuard>
         </ShareholderProvider>
       </div>
     </main>
