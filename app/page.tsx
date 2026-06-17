@@ -605,14 +605,6 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
           </button>
         </div>
 
-        {/* 一键生成带客码按钮 */}
-        <button
-          onClick={onShowReferralQR}
-          className="mt-4 w-full rounded-2xl bg-emerald-400 py-3 text-sm font-bold text-zinc-950 transition hover:bg-emerald-300"
-        >
-          按此金额生成带客消费码 →
-        </button>
-
         <div className="mt-5 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white/10 p-4">
             <p className="text-xs text-white/50">食物奖励 {(rates.food * 100).toFixed(rates.food % 1 === 0 ? 0 : 1)}%</p>
