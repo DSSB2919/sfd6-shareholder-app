@@ -300,6 +300,44 @@ export default function AdminShareholders() {
                 />
               </div>
               
+              {/* 股份选择 - 更直观的按钮选择 */}
+              <div>
+                <label className="mb-2 block text-sm text-white/60">股份等级</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { share: 1, label: '1%', desc: 'Support' },
+                    { share: 3, label: '3%', desc: 'Lifestyle' },
+                    { share: 5, label: '5%', desc: 'Strategic' },
+                    { share: 10, label: '10%', desc: 'Core' },
+                    { share: 20, label: '20%', desc: 'Founding' },
+                    { share: 0, label: '自定义', desc: 'Other' },
+                  ].map((option) => (
+                    <button
+                      key={option.share}
+                      type="button"
+                      onClick={() => {
+                        if (option.share === 0) return; // 自定义不处理
+                        const investment = option.share * 9600;
+                        setFormData({
+                          ...formData,
+                          share_percent: option.share,
+                          actual_investment_rm: investment,
+                          points_balance: investment,
+                        });
+                      }}
+                      className={`rounded-xl px-3 py-2 text-xs transition ${
+                        formData.share_percent === option.share
+                          ? 'bg-emerald-400 text-zinc-950 font-bold'
+                          : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
+                    >
+                      <div>{option.label}</div>
+                      <div className="text-[10px] opacity-70">{option.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-2 block text-sm text-white/60">股份 %</label>
@@ -311,8 +349,8 @@ export default function AdminShareholders() {
                     onChange={(e) => {
                       const share = parseInt(e.target.value) || 1;
                       const investment = share * 9600;
-                      setFormData({ 
-                        ...formData, 
+                      setFormData({
+                        ...formData,
                         share_percent: share,
                         actual_investment_rm: investment,
                         points_balance: investment,
@@ -326,30 +364,37 @@ export default function AdminShareholders() {
                   <input
                     type="number"
                     value={formData.actual_investment_rm}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      actual_investment_rm: parseInt(e.target.value) || 0 
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      actual_investment_rm: parseInt(e.target.value) || 0
                     })}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-emerald-400 focus:outline-none"
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="mb-2 block text-sm text-white/60">初始积分</label>
                 <input
                   type="number"
                   value={formData.points_balance}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    points_balance: parseInt(e.target.value) || 0 
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    points_balance: parseInt(e.target.value) || 0
                   })}
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-emerald-400 focus:outline-none"
                 />
-                <p className="mt-1 text-xs text-white/40">
-                  等级: {getTierByShare(formData.share_percent)} | 
-                  每周积分: {getWeeklyPointsByTier(getTierByShare(formData.share_percent))}
-                </p>
+              </div>
+
+              {/* 自动计算的信息预览 */}
+              <div className="rounded-xl bg-emerald-400/10 p-4">
+                <h4 className="text-sm font-bold text-emerald-300">自动生成的信息</h4>
+                <div className="mt-2 space-y-1 text-xs text-white/70">
+                  <p>股东等级: <span className="text-white">{getTierByShare(formData.share_percent)}</span></p>
+                  <p>每周积分: <span className="text-white">{getWeeklyPointsByTier(getTierByShare(formData.share_percent))} 分</span></p>
+                  <p>会员编号: <span className="text-white">自动生成 (如: SFD6-FP-001)</span></p>
+                  <p>推荐码: <span className="text-white">自动生成 (如: SFD6-FP-001-2026)</span></p>
+                </div>
               </div>
             </div>
 
