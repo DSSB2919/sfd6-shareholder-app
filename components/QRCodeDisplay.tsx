@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Icon } from './Icon';
@@ -30,6 +30,8 @@ export function QRCodeDisplay({
   const [qrData, setQrData] = useState('');
   const [isExpired, setIsExpired] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
+  const [shareSuccess, setShareSuccess] = useState(false);
+  const qrContainerRef = useRef<HTMLDivElement>(null);
 
   // Generate new QR code
   const generateNewQR = () => {
@@ -191,6 +193,43 @@ export function QRCodeDisplay({
             </span>
           </div>
         </div>
+
+        {/* Share Button (家属码显示) */}
+        {type === 'family' && !isExpired && (
+          <button
+            onClick={async () => {
+              try {
+                // 尝试使用原生分享API
+                if (navigator.share) {
+                  await navigator.share({
+                    title: 'SFD6 家属消费码',
+                    text: `${shareholderName} 的家属消费码，请在6小时内使用`,
+                  });
+                  setShareSuccess(true);
+                  setTimeout(() => setShareSuccess(false), 2000);
+                } else {
+                  // 不支持分享API时，提示截图
+                  alert('请截图保存二维码，发送给家属');
+                }
+              } catch {
+                // 用户取消分享
+              }
+            }}
+            className="mb-3 w-full rounded-2xl border border-emerald-400/50 bg-emerald-400/10 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/20"
+          >
+            分享二维码
+          </button>
+        )}
+
+        {shareSuccess && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-3 text-center text-xs text-emerald-300"
+          >
+            ✓ 分享成功
+          </motion.p>
+        )}
 
         {/* Refresh Button */}
         <button

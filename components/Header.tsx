@@ -24,7 +24,9 @@ export function Header({ shareholder, onShowQR }: HeaderProps) {
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Snowy Fox</p>
           <h1 className="mt-1 text-2xl font-black leading-tight">Shareholder Lifestyle Club</h1>
-          <p className="mt-1 text-sm text-white/60">最新投资人展示版 · RM9,600 / 1%</p>
+          <p className="mt-1 text-sm text-white/60">
+            {shareholder.share_percent}% 股东 · {shareholder.tier}
+          </p>
         </div>
         <div className="rounded-3xl bg-white/10 p-3 backdrop-blur">
           <Icon name="snow" className="h-7 w-7 text-emerald-300" />

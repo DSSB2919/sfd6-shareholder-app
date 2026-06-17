@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Icon } from './Icon';
 
 interface BottomNavProps {
@@ -16,6 +17,25 @@ const items = [
 ];
 
 export function BottomNav({ active, setActive }: BottomNavProps) {
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    // 监听可视区域变化来检测键盘弹出
+    const handleResize = () => {
+      // 如果窗口高度小于屏幕高度的 75%，认为键盘弹出了
+      const isKeyboard = window.innerHeight < window.screen.height * 0.75;
+      setIsKeyboardVisible(isKeyboard);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 键盘弹出时隐藏导航栏
+  if (isKeyboardVisible) {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 border-t border-white/10 bg-zinc-950/90 px-3 py-2 backdrop-blur-xl">
       <div className="grid grid-cols-5 gap-1">

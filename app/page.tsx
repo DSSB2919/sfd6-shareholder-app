@@ -111,6 +111,8 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
             label="Snow Points"
             value={shareholder.points_balance.toLocaleString()}
             sub={`${shareholder.share_percent}% ${shareholder.tier}`}
+            animate
+            numericValue={shareholder.points_balance}
           />
           <StatCard
             icon="shield"
@@ -190,8 +192,30 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
 
 function PointsScreen() {
   const { shareholder, loading, error } = useShareholder();
-  const [foodAmount, setFoodAmount] = useState(100);
-  const [alcoholAmount, setAlcoholAmount] = useState(100);
+  // 从 localStorage 读取保存的计算值
+  const [foodAmount, setFoodAmount] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('points_calculator_food');
+      return saved ? parseInt(saved, 10) : 100;
+    }
+    return 100;
+  });
+  const [alcoholAmount, setAlcoholAmount] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('points_calculator_alcohol');
+      return saved ? parseInt(saved, 10) : 100;
+    }
+    return 100;
+  });
+
+  // 保存计算值到 localStorage
+  useEffect(() => {
+    localStorage.setItem('points_calculator_food', foodAmount.toString());
+  }, [foodAmount]);
+
+  useEffect(() => {
+    localStorage.setItem('points_calculator_alcohol', alcoholAmount.toString());
+  }, [alcoholAmount]);
 
   if (loading) {
     return (
@@ -562,6 +586,15 @@ function ReferralScreen({ onShowReferralQR }: { onShowReferralQR: () => void }) 
             <Icon name="plus" className="h-4 w-4" />
           </button>
         </div>
+
+        {/* 一键生成带客码按钮 */}
+        <button
+          onClick={onShowReferralQR}
+          className="mt-4 w-full rounded-2xl bg-emerald-400 py-3 text-sm font-bold text-zinc-950 transition hover:bg-emerald-300"
+        >
+          按此金额生成带客消费码 →
+        </button>
+
         <div className="mt-5 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white/10 p-4">
             <p className="text-xs text-white/50">食物奖励 10%</p>
@@ -882,10 +915,10 @@ function FamilyQRScreen() {
       <div className="rounded-3xl border border-white/10 bg-zinc-900 p-5 text-white">
         <h3 className="font-bold">使用提示</h3>
         <ul className="mt-3 space-y-2 text-sm text-white/60">
-          <li>• 每位股东最多可为 2 位家属生成消费码</li>
           <li>• 家属消费不享受 Weekly Points 抵扣</li>
           <li>• 积分直接从主卡 Snow Points 扣除</li>
           <li>• 截图后请尽快使用，6 小时后失效</li>
+          <li>• 可多次生成，每次生成新的独立二维码</li>
         </ul>
       </div>
     </div>
