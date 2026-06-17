@@ -1,56 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, getTierByShare, getWeeklyPointsByTier, generateMemberNo, generateReferralCode } from '@/lib/utils';
 import type { Shareholder } from '@/types';
 
-// Mock data
-const mockShareholders: Shareholder[] = [
-  {
-    id: 1,
-    member_no: 'SFD6-FP-001',
-    name: 'MR. LEE WEN CHUIN',
-    phone: '+60123456789',
-    email: 'lee@example.com',
-    share_percent: 20,
-    actual_investment_rm: 192000,
-    points_balance: 185000,
-    tier: 'Founding Partner',
-    weekly_points: 300,
-    referral_code: 'SFD6-FP-2026',
-  },
-  {
-    id: 2,
-    member_no: 'SFD6-CR-002',
-    name: 'MS. TAN MEI LING',
-    phone: '+60129876543',
-    email: 'tan@example.com',
-    share_percent: 10,
-    actual_investment_rm: 96000,
-    points_balance: 92000,
-    tier: 'Core Shareholder',
-    weekly_points: 150,
-    referral_code: 'SFD6-CR-2026',
-  },
-  {
-    id: 3,
-    member_no: 'SFD6-ST-003',
-    name: 'MR. WONG KAI MING',
-    phone: '+60187654321',
-    email: 'wong@example.com',
-    share_percent: 5,
-    actual_investment_rm: 48000,
-    points_balance: 45000,
-    tier: 'Strategic Shareholder',
-    weekly_points: 80,
-    referral_code: 'SFD6-ST-2026',
-  },
-];
-
 export default function AdminShareholders() {
-  const [shareholders, setShareholders] = useState<Shareholder[]>(mockShareholders);
+  const [shareholders, setShareholders] = useState<Shareholder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,29 +29,71 @@ export default function AdminShareholders() {
     s.phone.includes(searchQuery)
   );
 
-  const handleSubmit = () => {
-    if (editingId) {
-      // Update existing
-      setShareholders(shareholders.map(s => 
-        s.id === editingId 
-          ? { ...s, ...formData, tier: getTierByShare(formData.share_percent) as Shareholder['tier'] }
-          : s
-      ));
-    } else {
-      // Add new
-      const newId = Math.max(...shareholders.map(s => s.id)) + 1;
-      const memberNo = generateMemberNo(formData.share_percent, newId);
-      const newShareholder: Shareholder = {
-        id: newId,
-        member_no: memberNo,
-        ...formData,
-        tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
-        weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-        referral_code: generateReferralCode(memberNo),
-      };
-      setShareholders([...shareholders, newShareholder]);
+  // 获取股东列表
+  useEffect(() => {
+    fetchShareholders();
+  }, []);
+
+  const fetchShareholders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/shareholders'); // 获取所有股东
+      if (!response.ok) {
+        throw new Error('Failed to fetch shareholders');
+      }
+      const data = await response.json();
+      setShareholders(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
     }
-    closeModal();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (editingId) {
+        // Update existing - 调用 PUT /api/shareholder
+        const response = await fetch('/api/shareholder', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingId,
+            ...formData,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.error || '更新失败');
+          return;
+        }
+
+        const updatedShareholder = await response.json();
+        setShareholders(shareholders.map(s =>
+          s.id === editingId ? updatedShareholder : s
+        ));
+      } else {
+        // Add new - 调用 POST /api/shareholders
+        const response = await fetch('/api/shareholders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.error || '添加失败');
+          return;
+        }
+
+        const newShareholder = await response.json();
+        setShareholders([newShareholder, ...shareholders]);
+      }
+      closeModal();
+    } catch (err) {
+      alert('操作失败，请重试');
+    }
   };
 
   const handleEdit = (shareholder: Shareholder) => {
@@ -147,42 +148,76 @@ export default function AdminShareholders() {
       </div>
 
       <div className="px-5 pb-28 pt-6">
-        {/* Stats */}
-        <div className="mb-6 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs text-white/50">总股东数</p>
-            <p className="mt-1 text-2xl font-bold text-white">{shareholders.length}</p>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent"></div>
+              <p className="text-white/60">加载中...</p>
+            </div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs text-white/50">总积分发放</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-300">
-              {shareholders.reduce((sum, s) => sum + s.points_balance, 0).toLocaleString()}
-            </p>
-          </div>
-        </div>
+        )}
 
-        {/* Search & Add */}
-        <div className="mb-6 flex gap-3">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索股东..."
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
-            />
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Icon name="info" className="mx-auto mb-4 h-12 w-12 text-red-400" />
+              <p className="text-white">加载失败</p>
+              <p className="mt-2 text-sm text-white/60">{error}</p>
+              <button
+                onClick={fetchShareholders}
+                className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+              >
+                重新加载
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="rounded-2xl bg-emerald-400 px-4 py-3 font-bold text-zinc-950 hover:bg-emerald-300"
-          >
-            <Icon name="plus" className="h-5 w-5" />
-          </button>
-        </div>
+        )}
 
-        {/* Shareholders List */}
-        <div className="space-y-3">
-          {filteredShareholders.map((shareholder, index) => (
+        {!loading && !error && (
+          <>
+            {/* Stats */}
+            <div className="mb-6 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs text-white/50">总股东数</p>
+                <p className="mt-1 text-2xl font-bold text-white">{shareholders.length}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs text-white/50">总积分发放</p>
+                <p className="mt-1 text-2xl font-bold text-emerald-300">
+                  {shareholders.reduce((sum, s) => sum + s.points_balance, 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Search & Add */}
+            <div className="mb-6 flex gap-3">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="搜索股东..."
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
+                />
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="rounded-2xl bg-emerald-400 px-4 py-3 font-bold text-zinc-950 hover:bg-emerald-300"
+              >
+                <Icon name="plus" className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Shareholders List */}
+            <div className="space-y-3">
+              {filteredShareholders.length === 0 ? (
+                <div className="py-10 text-center">
+                  <p className="text-white/40">暂无股东数据</p>
+                </div>
+              ) : (
+                filteredShareholders.map((shareholder, index) => (
             <motion.div
               key={shareholder.id}
               initial={{ opacity: 0, y: 20 }}
@@ -215,8 +250,11 @@ export default function AdminShareholders() {
                 <span className="text-xs text-white/40">{formatRM(shareholder.actual_investment_rm)}</span>
               </div>
             </motion.div>
-          ))}
-        </div>
+              ))
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Add/Edit Modal */}
