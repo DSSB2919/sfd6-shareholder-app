@@ -1,14 +1,15 @@
-// WhatsApp Business API 服务
-// 当前为模拟实现，需要接入真实 BSP (如 360dialog)
+// WhatsApp Business API 服务 - Twilio 版本
+// 文档: https://www.twilio.com/docs/whatsapp/api
 
 const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
-// 360dialog API 配置
-const D360_API_URL = 'https://waba.360dialog.io/v1';
-const D360_API_KEY = process.env.WHATSAPP_API_KEY;
+// Twilio API 配置
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER; // 格式: whatsapp:+14155238886
 
 /**
- * 发送 WhatsApp OTP 消息
+ * 发送 WhatsApp OTP 消息 (Twilio)
  * 
  * @param phone - 手机号 (国际格式, 如 +60123456789)
  * @param code - 6位验证码
@@ -21,48 +22,39 @@ export async function sendWhatsAppOTP(phone: string, code: string): Promise<bool
     return true;
   }
 
-  // 如果没有配置 API Key，返回失败
-  if (!D360_API_KEY) {
-    console.error('WhatsApp API Key not configured');
+  // 检查配置
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_NUMBER) {
+    console.error('Twilio credentials not configured');
     return false;
   }
 
   try {
-    // 使用 360dialog API 发送模板消息
-    const response = await fetch(`${D360_API_URL}/messages`, {
+    const messageBody = `Your SFD6 Shareholder App verification code is: ${code}\n\nThis code will expire in 5 minutes.\nDo not share this code with anyone.`;
+    
+    // Twilio API 使用 Basic Auth
+    const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+    
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'D360-API-KEY': D360_API_KEY,
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phone,
-        type: 'template',
-        template: {
-          name: 'otp_verification', // 需要在 360dialog Dashboard 创建此模板
-          language: { code: 'en' },
-          components: [
-            {
-              type: 'body',
-              parameters: [
-                { type: 'text', text: code },
-              ],
-            },
-          ],
-        },
+      body: new URLSearchParams({
+        'From': TWILIO_WHATSAPP_NUMBER,
+        'To': `whatsapp:${phone}`,
+        'Body': messageBody,
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('WhatsApp API error:', error);
+      console.error('Twilio WhatsApp API error:', error);
       return false;
     }
 
     const result = await response.json();
-    console.log('WhatsApp message sent:', result);
+    console.log('WhatsApp OTP sent via Twilio:', result.sid);
     return true;
   } catch (error) {
     console.error('Send WhatsApp OTP error:', error);
@@ -71,7 +63,7 @@ export async function sendWhatsAppOTP(phone: string, code: string): Promise<bool
 }
 
 /**
- * 发送普通文本消息 (仅用于测试)
+ * 发送普通文本消息 (Twilio)
  * 
  * @param phone - 手机号
  * @param message - 消息内容
@@ -83,24 +75,24 @@ export async function sendWhatsAppMessage(phone: string, message: string): Promi
     return true;
   }
 
-  if (!D360_API_KEY) {
-    console.error('WhatsApp API Key not configured');
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_WHATSAPP_NUMBER) {
+    console.error('Twilio credentials not configured');
     return false;
   }
 
   try {
-    const response = await fetch(`${D360_API_URL}/messages`, {
+    const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+    
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'D360-API-KEY': D360_API_KEY,
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: phone,
-        type: 'text',
-        text: { body: message },
+      body: new URLSearchParams({
+        'From': TWILIO_WHATSAPP_NUMBER,
+        'To': `whatsapp:${phone}`,
+        'Body': message,
       }),
     });
 
@@ -116,12 +108,16 @@ export async function sendWhatsAppMessage(phone: string, message: string): Promi
  */
 export function getWhatsAppConfigStatus(): {
   configured: boolean;
-  apiKeySet: boolean;
+  accountSidSet: boolean;
+  authTokenSet: boolean;
+  whatsappNumberSet: boolean;
   environment: string;
 } {
   return {
-    configured: !!D360_API_KEY || IS_DEVELOPMENT,
-    apiKeySet: !!D360_API_KEY,
+    configured: !!(TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && TWILIO_WHATSAPP_NUMBER) || IS_DEVELOPMENT,
+    accountSidSet: !!TWILIO_ACCOUNT_SID,
+    authTokenSet: !!TWILIO_AUTH_TOKEN,
+    whatsappNumberSet: !!TWILIO_WHATSAPP_NUMBER,
     environment: process.env.NODE_ENV || 'unknown',
   };
 }

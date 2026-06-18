@@ -22,17 +22,12 @@
 - [ ] 确认 Storage Bucket `receipts` 已创建
 - [ ] 获取 `NEXT_PUBLIC_SUPABASE_URL` 和 `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-### 3. 注册 360dialog (WhatsApp API)
-- [ ] 访问 https://360dialog.com 注册账号
-- [ ] 完成 Facebook Business 验证
-- [ ] 创建消息模板 `otp_verification`:
-  ```
-  Your SFD6 Shareholder App verification code is: {{1}}
-  
-  This code will expire in 5 minutes.
-  Do not share this code with anyone.
-  ```
-- [ ] 获取 API Key
+### 3. 注册 Twilio (WhatsApp API)
+- [ ] 访问 https://www.twilio.com 注册账号
+- [ ] 完成身份验证
+- [ ] 获取 Account SID 和 Auth Token
+- [ ] 购买或申请 WhatsApp 号码 (格式: whatsapp:+14155238886)
+- [ ] 用测试手机号验证 WhatsApp 功能
 
 ---
 
@@ -55,7 +50,9 @@
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIs...` | Supabase Anon Key |
 | `JWT_SECRET` | (生成) | JWT 签名密钥 |
 | `QR_SECRET_KEY` | (生成) | QR Code 密钥 |
-| `WHATSAPP_API_KEY` | (从360dialog获取) | WhatsApp API Key |
+| `TWILIO_ACCOUNT_SID` | (从Twilio获取) | Twilio Account SID |
+| `TWILIO_AUTH_TOKEN` | (从Twilio获取) | Twilio Auth Token |
+| `TWILIO_WHATSAPP_NUMBER` | `whatsapp:+14155238886` | Twilio WhatsApp 号码 |
 
 生成密钥命令:
 ```bash
@@ -154,9 +151,10 @@ Vercel Serverless 需要动态路由支持
 ### WhatsApp 发送失败
 ```
 检查:
-1. WHATSAPP_API_KEY 是否正确
-2. 模板是否已审核通过
-3. 手机号格式是否正确 (+60XXXXXXXXX)
+1. TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN 是否正确
+2. TWILIO_WHATSAPP_NUMBER 格式是否正确 (whatsapp:+14155238886)
+3. 目标手机号是否已加入 Twilio Sandbox (测试阶段)
+4. 手机号格式是否正确 (+60XXXXXXXXX)
 ```
 
 ---
