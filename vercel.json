@@ -1,11 +1,7 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "outputDirectory": ".next",
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@sfd6_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@sfd6_supabase_anon_key",
-    "JWT_SECRET": "@sfd6_jwt_secret"
-  }
+  "regions": ["sin1"]
 }
