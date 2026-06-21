@@ -21,6 +21,8 @@ export default function AdminShareholders() {
     share_percent: 1,
     actual_investment_rm: 9600,
     points_balance: 9600,
+    member_no: '',
+    referral_code: '',
   });
 
   const filteredShareholders = shareholders.filter(s =>
@@ -197,7 +199,9 @@ export default function AdminShareholders() {
         if (isDev) {
           // 开发环境直接添加到本地状态
           const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
-          const memberNo = generateMemberNo(formData.share_percent, newId);
+          // 使用手动输入的会员编号和推荐码，如果没有则自动生成
+          const memberNo = formData.member_no || generateMemberNo(formData.share_percent, newId);
+          const referralCode = formData.referral_code || generateReferralCode(memberNo);
           const newShareholder: Shareholder = {
             id: newId,
             member_no: memberNo,
@@ -209,7 +213,7 @@ export default function AdminShareholders() {
             points_balance: formData.points_balance,
             tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
             weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-            referral_code: generateReferralCode(memberNo),
+            referral_code: referralCode,
             is_active: true,
           };
           setShareholders([newShareholder, ...shareholders]);
@@ -246,6 +250,8 @@ export default function AdminShareholders() {
       share_percent: shareholder.share_percent,
       actual_investment_rm: shareholder.actual_investment_rm,
       points_balance: shareholder.points_balance,
+      member_no: shareholder.member_no,
+      referral_code: shareholder.referral_code,
     });
     setShowAddModal(true);
   };
@@ -260,6 +266,8 @@ export default function AdminShareholders() {
       share_percent: 1,
       actual_investment_rm: 9600,
       points_balance: 9600,
+      member_no: '',
+      referral_code: '',
     });
   };
 
@@ -538,14 +546,39 @@ export default function AdminShareholders() {
                 />
               </div>
 
+              {/* 会员编号和推荐码 - 可手动编辑 */}
+              <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 p-4">
+                <h4 className="text-sm font-bold text-amber-300">会员信息（可手动编辑）</h4>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label className="mb-1 block text-xs text-white/60">会员编号</label>
+                    <input
+                      type="text"
+                      value={formData.member_no}
+                      onChange={(e) => setFormData({ ...formData, member_no: e.target.value })}
+                      placeholder={editingId ? formData.member_no : "留空自动生成，如: SFD6-FP-001"}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-white/60">推荐码</label>
+                    <input
+                      type="text"
+                      value={formData.referral_code}
+                      onChange={(e) => setFormData({ ...formData, referral_code: e.target.value })}
+                      placeholder={editingId ? formData.referral_code : "留空自动生成，如: SFD6-FP-001-2026"}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* 自动计算的信息预览 */}
               <div className="rounded-xl bg-emerald-400/10 p-4">
-                <h4 className="text-sm font-bold text-emerald-300">自动生成的信息</h4>
+                <h4 className="text-sm font-bold text-emerald-300">自动计算的信息</h4>
                 <div className="mt-2 space-y-1 text-xs text-white/70">
                   <p>股东等级: <span className="text-white">{getTierByShare(formData.share_percent)}</span></p>
                   <p>每周积分: <span className="text-white">{getWeeklyPointsByTier(getTierByShare(formData.share_percent))} 分</span></p>
-                  <p>会员编号: <span className="text-white">自动生成 (如: SFD6-FP-001)</span></p>
-                  <p>推荐码: <span className="text-white">自动生成 (如: SFD6-FP-001-2026)</span></p>
                 </div>
               </div>
             </div>
