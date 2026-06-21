@@ -34,10 +34,28 @@ export default function AdminShareholders() {
     s.phone.includes(searchQuery)
   );
 
-  // 获取股东列表
+  // 从 LocalStorage 加载数据
   useEffect(() => {
+    const saved = localStorage.getItem('sfd6_shareholders');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setShareholders(parsed);
+        setLoading(false);
+        return;
+      } catch {
+        // 解析失败，继续 fetch
+      }
+    }
     fetchShareholders();
   }, []);
+
+  // 保存到 LocalStorage
+  useEffect(() => {
+    if (shareholders.length > 0) {
+      localStorage.setItem('sfd6_shareholders', JSON.stringify(shareholders));
+    }
+  }, [shareholders]);
 
   const fetchShareholders = async () => {
     try {
