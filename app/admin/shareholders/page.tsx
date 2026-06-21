@@ -25,6 +25,9 @@ export default function AdminShareholders() {
     referral_code: '',
   });
 
+  // 股份输入的字符串状态（支持小数输入）
+  const [sharePercentInput, setSharePercentInput] = useState('1');
+
   const filteredShareholders = shareholders.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.member_no.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -286,6 +289,7 @@ export default function AdminShareholders() {
       member_no: shareholder.member_no,
       referral_code: shareholder.referral_code,
     });
+    setSharePercentInput(String(shareholder.share_percent));
     setShowAddModal(true);
   };
 
@@ -302,6 +306,7 @@ export default function AdminShareholders() {
       member_no: '',
       referral_code: '',
     });
+    setSharePercentInput('1');
   };
 
   return (
@@ -511,6 +516,7 @@ export default function AdminShareholders() {
                       onClick={() => {
                         if (option.share === 0) return; // 自定义不处理
                         const investment = option.share * 9600;
+                        setSharePercentInput(String(option.share));
                         setFormData({
                           ...formData,
                           share_percent: option.share,
@@ -535,21 +541,27 @@ export default function AdminShareholders() {
                 <div>
                   <label className="mb-2 block text-sm text-white/60">股份 %</label>
                   <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={formData.share_percent}
+                    type="text"
+                    inputMode="decimal"
+                    value={sharePercentInput}
                     onChange={(e) => {
-                      const share = parseInt(e.target.value) || 1;
-                      const investment = share * 9600;
-                      setFormData({
-                        ...formData,
-                        share_percent: share,
-                        actual_investment_rm: investment,
-                        points_balance: investment,
-                      });
+                      // 允许输入小数
+                      const value = e.target.value;
+                      // 只允许数字和小数点
+                      if (/^\d*\.?\d*$/.test(value)) {
+                        setSharePercentInput(value);
+                        const share = parseFloat(value) || 0;
+                        const investment = Math.round(share * 9600);
+                        setFormData({
+                          ...formData,
+                          share_percent: share,
+                          actual_investment_rm: investment,
+                          points_balance: investment,
+                        });
+                      }
                     }}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:border-emerald-400 focus:outline-none"
+                    placeholder="如: 15.294"
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
                   />
                 </div>
                 <div>
