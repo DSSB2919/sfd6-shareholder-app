@@ -34,142 +34,24 @@ export default function AdminShareholders() {
     s.phone.includes(searchQuery)
   );
 
-  // 从 LocalStorage 加载数据
+  // 从 Supabase 加载数据
   useEffect(() => {
-    const saved = localStorage.getItem('sfd6_shareholders');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setShareholders(parsed);
-        setLoading(false);
-        return;
-      } catch {
-        // 解析失败，继续 fetch
-      }
-    }
     fetchShareholders();
   }, []);
-
-  // 保存到 LocalStorage
-  useEffect(() => {
-    if (shareholders.length > 0) {
-      localStorage.setItem('sfd6_shareholders', JSON.stringify(shareholders));
-    }
-  }, [shareholders]);
 
   const fetchShareholders = async () => {
     try {
       setLoading(true);
       
-      // 开发环境：使用 mock 数据
-      const isDev = process.env.NODE_ENV === 'development';
-      if (isDev) {
-        // 模拟 API 延迟
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const mockData: Shareholder[] = [
-          {
-            id: 1,
-            member_no: 'SFD6-FP-001',
-            name: 'MR. LEE WEN CHUIN',
-            phone: '+60123456789',
-            email: 'lee@example.com',
-            share_percent: 20,
-            actual_investment_rm: 192000,
-            points_balance: 192000,
-            tier: 'Founding Partner',
-            weekly_points: 300,
-            referral_code: 'SFD6-FP-2026',
-            is_active: true,
-          },
-          {
-            id: 2,
-            member_no: 'SFD6-CR-002',
-            name: 'MS. TAN MEI LING',
-            phone: '+60129876543',
-            email: 'tan@example.com',
-            share_percent: 10,
-            actual_investment_rm: 96000,
-            points_balance: 96000,
-            tier: 'Core Shareholder',
-            weekly_points: 150,
-            referral_code: 'SFD6-CR-2026',
-            is_active: true,
-          },
-          {
-            id: 3,
-            member_no: 'SFD6-ST-003',
-            name: 'MR. WONG KAI MING',
-            phone: '+60187654321',
-            email: 'wong@example.com',
-            share_percent: 5,
-            actual_investment_rm: 48000,
-            points_balance: 48000,
-            tier: 'Strategic Shareholder',
-            weekly_points: 80,
-            referral_code: 'SFD6-ST-2026',
-            is_active: true,
-          },
-        ];
-        setShareholders(mockData);
-        setLoading(false);
-        return;
-      }
-      
-      const response = await fetch('/api/shareholders'); // 获取所有股东
+      const response = await fetch('/api/shareholders');
       if (!response.ok) {
         throw new Error('Failed to fetch shareholders');
       }
       const data = await response.json();
       setShareholders(data);
+      setError(null);
     } catch (err) {
-      // API 失败时显示 mock 数据（临时方案）
-      console.warn('API failed, using mock data:', err);
-      const mockData: Shareholder[] = [
-        {
-          id: 1,
-          member_no: 'SFD6-FP-001',
-          name: 'MR. LEE WEN CHUIN',
-          phone: '+60123456789',
-          email: 'lee@example.com',
-          share_percent: 20,
-          actual_investment_rm: 192000,
-          points_balance: 192000,
-          tier: 'Founding Partner',
-          weekly_points: 300,
-          referral_code: 'SFD6-FP-2026',
-          is_active: true,
-        },
-        {
-          id: 2,
-          member_no: 'SFD6-CS-001',
-          name: 'MS. TAN MEI LING',
-          phone: '+60198765432',
-          email: 'tan@example.com',
-          share_percent: 10,
-          actual_investment_rm: 96000,
-          points_balance: 96000,
-          tier: 'Core Shareholder',
-          weekly_points: 150,
-          referral_code: 'SFD6-CS-001-2026',
-          is_active: true,
-        },
-        {
-          id: 3,
-          member_no: 'SFD6-ST-001',
-          name: 'MR. WONG CHUN MING',
-          phone: '+60123456791',
-          email: 'wong@example.com',
-          share_percent: 5,
-          actual_investment_rm: 48000,
-          points_balance: 48000,
-          tier: 'Strategic Shareholder',
-          weekly_points: 80,
-          referral_code: 'SFD6-ST-001-2026',
-          is_active: true,
-        },
-      ];
-      setShareholders(mockData);
-      setError(null); // 不显示错误，使用 mock 数据
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -181,113 +63,42 @@ export default function AdminShareholders() {
       const isDev = process.env.NODE_ENV === 'development';
       
       if (editingId) {
-        // Update existing
-        if (isDev) {
-          // 开发环境直接更新本地状态
-          const updatedShareholder: Shareholder = {
-            ...shareholders.find(s => s.id === editingId)!,
+        // Update existing - 调用 API
+        const response = await fetch('/api/shareholder', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingId,
             ...formData,
-            tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
-            weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-          };
-          setShareholders(shareholders.map(s =>
-            s.id === editingId ? updatedShareholder : s
-          ));
-        } else {
-          // 生产环境调用 API
-          try {
-            const response = await fetch('/api/shareholder', {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                id: editingId,
-                ...formData,
-              }),
-            });
+          }),
+        });
 
-            if (!response.ok) {
-              throw new Error('API failed');
-            }
-
-            const updatedShareholder = await response.json();
-            setShareholders(shareholders.map(s =>
-              s.id === editingId ? updatedShareholder : s
-            ));
-          } catch (apiError) {
-            // API 失败时使用本地更新
-            console.warn('API failed, updating locally:', apiError);
-            const updatedShareholder: Shareholder = {
-              ...shareholders.find(s => s.id === editingId)!,
-              ...formData,
-              tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
-              weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-            };
-            setShareholders(shareholders.map(s =>
-              s.id === editingId ? updatedShareholder : s
-            ));
-          }
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.error || '更新失败');
+          return;
         }
+
+        const updatedShareholder = await response.json();
+        setShareholders(shareholders.map(s =>
+          s.id === editingId ? updatedShareholder : s
+        ));
       } else {
-        // Add new
-        if (isDev) {
-          // 开发环境直接添加到本地状态
-          const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
-          // 使用手动输入的会员编号和推荐码，如果没有则自动生成
-          const memberNo = formData.member_no || generateMemberNo(formData.share_percent, newId);
-          const referralCode = formData.referral_code || generateReferralCode(memberNo);
-          const newShareholder: Shareholder = {
-            id: newId,
-            member_no: memberNo,
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            share_percent: formData.share_percent,
-            actual_investment_rm: formData.actual_investment_rm,
-            points_balance: formData.points_balance,
-            tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
-            weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-            referral_code: referralCode,
-            is_active: true,
-          };
-          setShareholders([newShareholder, ...shareholders]);
-        } else {
-          // 生产环境调用 API
-          try {
-            const response = await fetch('/api/shareholders', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(formData),
-            });
+        // Add new - 调用 API
+        const response = await fetch('/api/shareholders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
 
-            if (!response.ok) {
-              throw new Error('API failed');
-            }
-
-            const newShareholder = await response.json();
-            setShareholders([newShareholder, ...shareholders]);
-          } catch (apiError) {
-            // API 失败时使用本地 mock 数据
-            console.warn('API failed, using local mock:', apiError);
-            const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
-            const memberNo = formData.member_no || generateMemberNo(formData.share_percent, newId);
-            const referralCode = formData.referral_code || generateReferralCode(memberNo);
-            const newShareholder: Shareholder = {
-              id: newId,
-              member_no: memberNo,
-              name: formData.name,
-              phone: formData.phone,
-              email: formData.email,
-              share_percent: formData.share_percent,
-              actual_investment_rm: formData.actual_investment_rm,
-              points_balance: formData.points_balance,
-              tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
-              weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-              referral_code: referralCode,
-              is_active: true,
-            };
-            setShareholders([newShareholder, ...shareholders]);
-          }
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.error || '添加失败');
+          return;
         }
+
+        const newShareholder = await response.json();
+        setShareholders([newShareholder, ...shareholders]);
       }
       closeModal();
     } catch (err) {
