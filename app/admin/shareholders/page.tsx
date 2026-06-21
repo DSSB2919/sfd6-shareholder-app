@@ -36,18 +36,24 @@ export default function AdminShareholders() {
 
   // 从 LocalStorage 加载数据（作为备份）
   useEffect(() => {
-    const saved = localStorage.getItem('sfd6_shareholders');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setShareholders(parsed);
-      } catch {
-        // 解析失败，使用空数组
+    const loadData = async () => {
+      const saved = localStorage.getItem('sfd6_shareholders');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setShareholders(parsed);
+        } catch {
+          // 解析失败，使用空数组
+          setShareholders([]);
+        }
+      } else {
         setShareholders([]);
       }
-    }
-    // 同时尝试从 API 加载
-    fetchShareholders();
+      setLoading(false);
+      // 同时尝试从 API 加载
+      await fetchShareholders();
+    };
+    loadData();
   }, []);
 
   // 保存到 LocalStorage
@@ -57,6 +63,7 @@ export default function AdminShareholders() {
 
   const fetchShareholders = async () => {
     try {
+      setLoading(true);
       const response = await fetch('/api/shareholders');
       if (!response.ok) {
         throw new Error('Failed to fetch shareholders');
@@ -68,6 +75,8 @@ export default function AdminShareholders() {
     } catch (err) {
       console.warn('API fetch failed, using local data:', err);
       // API 失败时保持 LocalStorage 数据
+    } finally {
+      setLoading(false);
     }
   };
 
