@@ -34,26 +34,9 @@ export default function AdminShareholders() {
     s.phone.includes(searchQuery)
   );
 
-  // 从 LocalStorage 加载数据（作为备份）
+  // 从 Supabase 加载数据（优先）
   useEffect(() => {
-    const loadData = async () => {
-      const saved = localStorage.getItem('sfd6_shareholders');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          setShareholders(parsed);
-        } catch {
-          // 解析失败，使用空数组
-          setShareholders([]);
-        }
-      } else {
-        setShareholders([]);
-      }
-      setLoading(false);
-      // 同时尝试从 API 加载
-      await fetchShareholders();
-    };
-    loadData();
+    fetchShareholders();
   }, []);
 
   // 保存到 LocalStorage
@@ -116,31 +99,12 @@ export default function AdminShareholders() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          alert(`保存失败: ${errorData.error}\n\n数据将只保存在本地，股东端无法登录。`);
-          
-          // 本地添加作为备份
-          const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
-          const memberNo = formData.member_no || generateMemberNo(formData.share_percent, newId);
-          const referralCode = formData.referral_code || generateReferralCode(memberNo);
-          const newShareholder: Shareholder = {
-            id: newId,
-            member_no: memberNo,
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            share_percent: formData.share_percent,
-            actual_investment_rm: formData.actual_investment_rm,
-            points_balance: formData.points_balance,
-            tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
-            weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
-            referral_code: referralCode,
-            is_active: true,
-          };
-          setShareholders([newShareholder, ...shareholders]);
-        } else {
-          const newShareholder = await response.json();
-          setShareholders([newShareholder, ...shareholders]);
+          alert(`保存失败: ${errorData.error}`);
+          return;
         }
+
+        const newShareholder = await response.json();
+        setShareholders([newShareholder, ...shareholders]);
       }
       closeModal();
     } catch (err) {
