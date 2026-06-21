@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 // 简单的管理员账号（生产环境应该使用数据库）
 const ADMIN_CREDENTIALS = {
   username: 'admin',

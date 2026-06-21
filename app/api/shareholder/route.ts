@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { Shareholder } from '@/types';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 // GET /api/shareholder
 // 获取当前登录股东信息
 // 实际项目中应该通过 JWT token 或 session 识别用户

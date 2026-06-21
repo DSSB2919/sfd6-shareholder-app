@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendWhatsAppOTP } from '@/lib/whatsapp';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 // 生成 6 位数字验证码
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();

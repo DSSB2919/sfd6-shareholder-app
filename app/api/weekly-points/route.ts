@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 // 获取当前 ISO 周数
 function getISOWeek(date: Date = new Date()): number {
   const tmpDate = new Date(date.valueOf());

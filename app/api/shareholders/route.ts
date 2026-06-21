@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// 强制动态渲染
+export const dynamic = 'force-dynamic';
+
 // GET /api/shareholders
 // 获取所有股东列表（管理后台使用）
 export async function GET(request: NextRequest) {
