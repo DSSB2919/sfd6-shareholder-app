@@ -107,23 +107,18 @@ export default function AdminShareholders() {
           s.id === editingId ? updatedShareholder : s
         ));
       } else {
-        // Add new - 先尝试 API，失败则保存到本地
-        try {
-          const response = await fetch('/api/shareholders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData),
-          });
+        // Add new - 调用 API
+        const response = await fetch('/api/shareholders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
 
-          if (response.ok) {
-            const newShareholder = await response.json();
-            setShareholders([newShareholder, ...shareholders]);
-          } else {
-            // API 失败，保存到本地
-            throw new Error('API failed');
-          }
-        } catch (apiError) {
-          // 本地添加
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          alert(`保存失败: ${errorData.error}\n\n数据将只保存在本地，股东端无法登录。`);
+          
+          // 本地添加作为备份
           const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
           const memberNo = formData.member_no || generateMemberNo(formData.share_percent, newId);
           const referralCode = formData.referral_code || generateReferralCode(memberNo);
@@ -141,6 +136,9 @@ export default function AdminShareholders() {
             referral_code: referralCode,
             is_active: true,
           };
+          setShareholders([newShareholder, ...shareholders]);
+        } else {
+          const newShareholder = await response.json();
           setShareholders([newShareholder, ...shareholders]);
         }
       }
