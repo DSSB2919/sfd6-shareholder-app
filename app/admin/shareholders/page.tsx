@@ -415,7 +415,7 @@ export default function AdminShareholders() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-900 p-6"
+            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/10 bg-zinc-900 p-6"
           >
             <h2 className="text-xl font-bold text-white">
               {editingId ? '编辑股东' : '添加股东'}
