@@ -12,6 +12,9 @@ export interface Shareholder {
   tier: ShareholderTier;
   weekly_points: number;
   referral_code: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
   family_cards?: FamilyCard[];
 }
 

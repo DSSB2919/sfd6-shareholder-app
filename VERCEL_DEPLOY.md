@@ -19,13 +19,15 @@
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://ffgfzvnoyyvfmhuorzcw.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2Z6dm5veXl2Zm1odW9yemN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzA5OTAsImV4cCI6MjA5NjkwNjk5MH0.8JyBqa2HGiOrF2CxsPJYuM_rdXcUlxFGD_aHqluOwTE
-JWT_SECRET=vhYedCQhbmopgH4nCy3x3tE3DQZpb6nprSL02yM3PQY=
-QR_SECRET_KEY=Wk5oRX/Drm+dCzLOAfjjf2Rp0ZJ10snBg1ftoY4NBeI=
-TWILIO_ACCOUNT_SID=ACb617573b4b2f8744d8642db6218a825d
-TWILIO_AUTH_TOKEN=2d647bcb76cebf677ff9b211beab6037
-TWILIO_WHATSAPP_NUMBER=whatsapp:+19087086790
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+JWT_SECRET=<your-jwt-secret>
+QR_SECRET_KEY=<your-qr-secret-key>
+TWILIO_ACCOUNT_SID=<your-twilio-account-sid>
+TWILIO_AUTH_TOKEN=<your-twilio-auth-token>
+TWILIO_WHATSAPP_NUMBER=whatsapp:<your-twilio-number>
 ```
+
+> 注意：实际密钥值请参考项目文档或联系开发团队获取
 
 ### 步骤 4：部署
 1. 点击 "Deploy"
@@ -59,20 +61,22 @@ vercel --prod
 CLI 会提示输入环境变量，或者你可以先创建 `.env.local` 文件：
 
 ```bash
-# 创建环境变量文件
+# 创建环境变量文件（请替换为实际值）
 cat > .env.local << 'EOF'
 NEXT_PUBLIC_SUPABASE_URL=https://ffgfzvnoyyvfmhuorzcw.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZ2Z6dm5veXl2Zm1odW9yemN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzA5OTAsImV4cCI6MjA5NjkwNjk5MH0.8JyBqa2HGiOrF2CxsPJYuM_rdXcUlxFGD_aHqluOwTE
-JWT_SECRET=vhYedCQhbmopgH4nCy3x3tE3DQZpb6nprSL02yM3PQY=
-QR_SECRET_KEY=Wk5oRX/Drm+dCzLOAfjjf2Rp0ZJ10snBg1ftoY4NBeI=
-TWILIO_ACCOUNT_SID=ACb617573b4b2f8744d8642db6218a825d
-TWILIO_AUTH_TOKEN=2d647bcb76cebf677ff9b211beab6037
-TWILIO_WHATSAPP_NUMBER=whatsapp:+19087086790
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+JWT_SECRET=<your-jwt-secret>
+QR_SECRET_KEY=<your-qr-secret-key>
+TWILIO_ACCOUNT_SID=<your-twilio-account-sid>
+TWILIO_AUTH_TOKEN=<your-twilio-auth-token>
+TWILIO_WHATSAPP_NUMBER=whatsapp:<your-twilio-number>
 EOF
 
 # 然后部署
 vercel --prod
 ```
+
+> 注意：实际密钥值请联系开发团队获取
 
 ---
 
@@ -108,12 +112,14 @@ vercel
 | `VERCEL_ORG_ID` | 从步骤2获取的 orgId |
 | `VERCEL_PROJECT_ID` | 从步骤2获取的 projectId |
 | `NEXT_PUBLIC_SUPABASE_URL` | https://ffgfzvnoyyvfmhuorzcw.supabase.co |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... |
-| `JWT_SECRET` | vhYedCQhbmopgH4nCy3x3tE3DQZpb6nprSL02yM3PQY= |
-| `QR_SECRET_KEY` | Wk5oRX/Drm+dCzLOAfjjf2Rp0ZJ10snBg1ftoY4NBeI= |
-| `TWILIO_ACCOUNT_SID` | ACb617573b4b2f8744d8642db6218a825d |
-| `TWILIO_AUTH_TOKEN` | 2d647bcb76cebf677ff9b211beab6037 |
-| `TWILIO_WHATSAPP_NUMBER` | whatsapp:+19087086790 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | <your-supabase-anon-key> |
+| `JWT_SECRET` | <your-jwt-secret> |
+| `QR_SECRET_KEY` | <your-qr-secret-key> |
+| `TWILIO_ACCOUNT_SID` | <your-twilio-account-sid> |
+| `TWILIO_AUTH_TOKEN` | <your-twilio-auth-token> |
+| `TWILIO_WHATSAPP_NUMBER` | whatsapp:<your-twilio-number> |
+
+> 注意：实际密钥值请联系开发团队获取
 
 ### 步骤 4：触发部署
 推送代码到 main 分支会自动触发部署：
