@@ -128,6 +128,30 @@ export default function AdminShareholders() {
     setShowAddModal(true);
   };
 
+  const handleDelete = async () => {
+    if (!editingId) return;
+    
+    if (!confirm('确定要删除这个股东吗？此操作不可恢复。')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/shareholders/${editingId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        alert('删除失败');
+        return;
+      }
+
+      setShareholders(shareholders.filter(s => s.id !== editingId));
+      closeModal();
+    } catch (err) {
+      alert('删除失败，请重试');
+    }
+  };
+
   const closeModal = () => {
     setShowAddModal(false);
     setEditingId(null);
@@ -464,6 +488,14 @@ export default function AdminShareholders() {
             </div>
 
             <div className="mt-6 flex gap-3">
+              {editingId && (
+                <button
+                  onClick={handleDelete}
+                  className="rounded-xl bg-red-400/20 px-4 py-3 font-bold text-red-300 hover:bg-red-400/30"
+                >
+                  删除
+                </button>
+              )}
               <button
                 onClick={closeModal}
                 className="flex-1 rounded-xl border border-white/20 bg-transparent py-3 font-bold text-white hover:bg-white/5"
