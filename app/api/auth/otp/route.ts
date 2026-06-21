@@ -60,6 +60,8 @@ export async function POST(request: NextRequest) {
     expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 分钟有效期
 
     // 保存到数据库
+    console.log('Saving OTP to database:', { phone, code: otp, expires_at: expiresAt.toISOString() });
+    
     const { error: insertError } = await supabase
       .from('otp_codes')
       .insert([
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('Insert OTP error:', insertError);
       return NextResponse.json(
-        { error: 'Failed to generate OTP' },
+        { error: `Failed to generate OTP: ${insertError.message}` },
         { status: 500 }
       );
     }
