@@ -124,6 +124,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // 调用数据库函数验证 OTP
+    console.log('Verifying OTP:', { phone, code });
+    
     const { data: isValid, error: verifyError } = await supabase
       .rpc('verify_otp', {
         p_phone: phone,
@@ -133,10 +135,12 @@ export async function PUT(request: NextRequest) {
     if (verifyError) {
       console.error('Verify OTP error:', verifyError);
       return NextResponse.json(
-        { error: 'Verification failed' },
+        { error: `Verification failed: ${verifyError.message}` },
         { status: 500 }
       );
     }
+
+    console.log('OTP verification result:', isValid);
 
     if (!isValid) {
       return NextResponse.json(
