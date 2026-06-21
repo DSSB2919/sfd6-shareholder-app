@@ -80,28 +80,33 @@ export async function POST(request: NextRequest) {
                         share_percent >= 5 ? 80 :
                         share_percent >= 3 ? 50 : 30;
 
+    // 准备插入数据
+    const insertData = {
+      member_no: memberNo,
+      name,
+      phone,
+      email: email || null,
+      share_percent,
+      actual_investment_rm: actual_investment_rm || Math.round(share_percent * 9600),
+      points_balance: points_balance || actual_investment_rm || Math.round(share_percent * 9600),
+      tier,
+      weekly_points: weeklyPoints,
+      referral_code: `${memberNo}-2026`,
+      is_active: true,
+    };
+    
+    console.log('Inserting shareholder:', insertData);
+
     const { data: newShareholder, error } = await supabase
       .from('shareholders')
-      .insert([{
-        member_no: memberNo,
-        name,
-        phone,
-        email,
-        share_percent,
-        actual_investment_rm: actual_investment_rm || share_percent * 9600,
-        points_balance: points_balance || actual_investment_rm || share_percent * 9600,
-        tier,
-        weekly_points: weeklyPoints,
-        referral_code: `${memberNo}-2026`,
-        is_active: true,
-      }])
+      .insert([insertData])
       .select()
       .single();
 
     if (error) {
       console.error('Create shareholder error:', error);
       return NextResponse.json(
-        { error: 'Failed to create shareholder' },
+        { error: `Failed to create shareholder: ${error.message}` },
         { status: 500 }
       );
     }
