@@ -34,26 +34,40 @@ export default function AdminShareholders() {
     s.phone.includes(searchQuery)
   );
 
-  // 从 Supabase 加载数据
+  // 从 LocalStorage 加载数据（作为备份）
   useEffect(() => {
+    const saved = localStorage.getItem('sfd6_shareholders');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setShareholders(parsed);
+      } catch {
+        // 解析失败，使用空数组
+        setShareholders([]);
+      }
+    }
+    // 同时尝试从 API 加载
     fetchShareholders();
   }, []);
 
+  // 保存到 LocalStorage
+  useEffect(() => {
+    localStorage.setItem('sfd6_shareholders', JSON.stringify(shareholders));
+  }, [shareholders]);
+
   const fetchShareholders = async () => {
     try {
-      setLoading(true);
-      
       const response = await fetch('/api/shareholders');
       if (!response.ok) {
         throw new Error('Failed to fetch shareholders');
       }
       const data = await response.json();
-      setShareholders(data);
-      setError(null);
+      if (data && data.length > 0) {
+        setShareholders(data);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
+      console.warn('API fetch failed, using local data:', err);
+      // API 失败时保持 LocalStorage 数据
     }
   };
 
@@ -84,21 +98,42 @@ export default function AdminShareholders() {
           s.id === editingId ? updatedShareholder : s
         ));
       } else {
-        // Add new - 调用 API
-        const response = await fetch('/api/shareholders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-        });
+        // Add new - 先尝试 API，失败则保存到本地
+        try {
+          const response = await fetch('/api/shareholders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+          });
 
-        if (!response.ok) {
-          const error = await response.json();
-          alert(error.error || '添加失败');
-          return;
+          if (response.ok) {
+            const newShareholder = await response.json();
+            setShareholders([newShareholder, ...shareholders]);
+          } else {
+            // API 失败，保存到本地
+            throw new Error('API failed');
+          }
+        } catch (apiError) {
+          // 本地添加
+          const newId = Math.max(...shareholders.map(s => s.id), 0) + 1;
+          const memberNo = formData.member_no || generateMemberNo(formData.share_percent, newId);
+          const referralCode = formData.referral_code || generateReferralCode(memberNo);
+          const newShareholder: Shareholder = {
+            id: newId,
+            member_no: memberNo,
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            share_percent: formData.share_percent,
+            actual_investment_rm: formData.actual_investment_rm,
+            points_balance: formData.points_balance,
+            tier: getTierByShare(formData.share_percent) as Shareholder['tier'],
+            weekly_points: getWeeklyPointsByTier(getTierByShare(formData.share_percent)),
+            referral_code: referralCode,
+            is_active: true,
+          };
+          setShareholders([newShareholder, ...shareholders]);
         }
-
-        const newShareholder = await response.json();
-        setShareholders([newShareholder, ...shareholders]);
       }
       closeModal();
     } catch (err) {
