@@ -33,14 +33,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 检查手机号是否存在于股东表中
-    const { data: shareholder, error: shareholderError } = await supabase
+    // 检查手机号是否存在于股东表中（支持多种格式）
+    // 尝试匹配带 +60 的格式
+    let { data: shareholder, error: shareholderError } = await supabase
       .from('shareholders')
       .select('id, phone, is_active')
       .eq('phone', phone)
       .single();
 
-    if (shareholderError || !shareholder) {
+    // 如果没找到，尝试不带 +60 的格式
+    if (!shareholder && phone.startsWith('+60')) {
+      const phoneWithoutPrefix = phone.slice(3); // 去掉 +60
+      const result = await supabase
+        .from('shareholders')
+        .select('id, phone, is_active')
+        .eq('phone', phoneWithoutPrefix)
+        .single();
+      shareholder = result.data;
+      shareholderError = result.error;
+    }
+
+    // 还是没找到，尝试匹配后 9 位数字
+    if (!shareholder) {
+      const numericPhone = phone.replace(/\D/g, '');
+      const last9Digits = numericPhone.slice(-9);
+      const result = await supabase
+        .from('shareholders')
+        .select('id, phone, is_active')
+        .ilike('phone', `%${last9Digits}`)
+        .single();
+      shareholder = result.data;
+      shareholderError = result.error;
+    }
+
+    if (!shareholder) {
       return NextResponse.json(
         { error: 'Phone number not registered' },
         { status: 404 }

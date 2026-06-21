@@ -12,15 +12,22 @@ export default function LoginPage() {
   const [countdown, setCountdown] = useState(0);
   const [debugOtp, setDebugOtp] = useState<string | undefined>();
 
-  // 格式化手机号
+  // 格式化手机号（支持 +60 前缀或纯数字）
   const formatPhone = (value: string) => {
     const numeric = value.replace(/\D/g, '');
+    // 如果用户输入了 +60，保持不变
+    if (value.startsWith('+60')) {
+      return value;
+    }
+    // 如果数字以 60 开头，添加 +
     if (numeric.startsWith('60')) {
       return '+' + numeric;
     }
+    // 如果数字以 0 开头，替换为 +60
     if (numeric.startsWith('0')) {
       return '+60' + numeric.slice(1);
     }
+    // 否则添加 +60
     return '+60' + numeric;
   };
 
