@@ -171,6 +171,17 @@ export default function AdminRedemptions() {
       <div className="relative overflow-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-emerald-950 px-5 pb-6 pt-8">
         <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-emerald-400/20 blur-3xl" />
         
+        {/* Back Button */}
+        <div className="relative mb-4">
+          <a
+            href="/admin"
+            className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm text-white/70 transition hover:bg-white/20 hover:text-white"
+          >
+            <Icon name="chevron" className="h-4 w-4 rotate-180" />
+            返回管理后台
+          </a>
+        </div>
+        
         <div className="relative flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Admin</p>
