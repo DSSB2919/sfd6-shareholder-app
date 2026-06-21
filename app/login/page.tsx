@@ -46,9 +46,11 @@ export default function LoginPage() {
         return;
       }
 
-      // 开发环境显示 OTP
+      // 显示 OTP（用于测试）
       if (data.debug_otp) {
         setDebugOtp(data.debug_otp);
+      } else if (data.code) {
+        setDebugOtp(data.code);
       }
 
       setStep('otp');
@@ -204,11 +206,12 @@ export default function LoginPage() {
               <label className="mb-2 block text-sm font-medium text-white/80">验证码</label>
               <input
                 type="text"
+                inputMode="numeric"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="请输入6位验证码"
+                placeholder="000000"
                 maxLength={6}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-center text-2xl tracking-[0.5em] text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-center text-2xl text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
               />
               
               {/* 开发环境显示 OTP */}
