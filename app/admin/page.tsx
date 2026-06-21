@@ -21,6 +21,14 @@ const adminModules = [
     color: 'amber',
   },
   {
+    id: 'data-viewer',
+    title: '数据查看器',
+    desc: '查看所有存储的数据表和统计信息',
+    icon: 'database',
+    href: '/admin/data-viewer',
+    color: 'purple',
+  },
+  {
     id: 'cashier',
     title: '收银台',
     desc: '扫码核销股东消费码',
