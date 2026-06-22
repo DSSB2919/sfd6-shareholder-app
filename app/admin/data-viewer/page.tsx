@@ -28,7 +28,7 @@ export default function DataViewer() {
     const fetchData = async () => {
       // 获取股东数据
       try {
-        const response = await fetch('/api/shareholders?active=false');
+        const response = await fetch('/api/shareholders/?active=false');
         if (response.ok) {
           const data = await response.json();
           setTables(prev => ({
@@ -45,7 +45,7 @@ export default function DataViewer() {
 
       // 获取核销记录
       try {
-        const response = await fetch('/api/redemptions');
+        const response = await fetch('/api/redemptions/');
         if (response.ok) {
           const data = await response.json();
           setTables(prev => ({

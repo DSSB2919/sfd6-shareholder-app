@@ -40,7 +40,7 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
       }
 
       // 从 API 获取最新数据（总是执行，确保数据同步）
-      const response = await fetch('/api/shareholder');
+      const response = await fetch('/api/shareholder/');
       if (!response.ok) {
         // 如果 API 失败但有缓存，保留缓存数据，只记录错误
         if (!hasCache) {

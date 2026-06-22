@@ -4,6 +4,7 @@ const nextConfig = {
     unoptimized: true,
   },
   trailingSlash: true,
+  skipTrailingSlashRedirect: true,
 };
 
 module.exports = nextConfig;
