@@ -13,7 +13,7 @@ export function AnimatedNumber({
   value,
   duration = 1000,
   className = '',
-  format = (n) => n.toLocaleString(),
+  format = (n) => (n || 0).toLocaleString(),
 }: AnimatedNumberProps) {
   const [displayValue, setDisplayValue] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);

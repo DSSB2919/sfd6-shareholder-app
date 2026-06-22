@@ -121,11 +121,11 @@ export default function DataViewer() {
           </div>
           <div className="rounded-2xl border border-blue-400/30 bg-blue-400/10 p-4">
             <p className="text-xs text-blue-300">总积分余额</p>
-            <p className="mt-1 text-lg font-black text-white">{stats.totalPoints.toLocaleString()}</p>
+            <p className="mt-1 text-lg font-black text-white">{(stats.totalPoints || 0).toLocaleString()}</p>
           </div>
           <div className="rounded-2xl border border-purple-400/30 bg-purple-400/10 p-4">
             <p className="text-xs text-purple-300">总投资额</p>
-            <p className="mt-1 text-lg font-black text-white">RM {stats.totalInvestment.toLocaleString()}</p>
+            <p className="mt-1 text-lg font-black text-white">RM {(stats.totalInvestment || 0).toLocaleString()}</p>
           </div>
         </div>
 
