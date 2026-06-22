@@ -211,7 +211,7 @@ export default function HomePage() {
             )}
           </main>
 
-          <BottomNav active={activeTab} onChange={setActiveTab} />
+          <BottomNav active={activeTab} setActive={setActiveTab} />
           <NetworkStatus />
         </div>
       </AuthGuard>
