@@ -110,7 +110,7 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
           <StatCard
             icon="wallet"
             label="Snow Points"
-            value={shareholder.points_balance.toLocaleString()}
+            value={(shareholder.points_balance || 0).toLocaleString()}
             sub={`${shareholder.share_percent}% ${shareholder.tier}`}
             animate
             numericValue={shareholder.points_balance}
@@ -152,14 +152,14 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
               <div className="flex items-center justify-between rounded-2xl bg-zinc-950/50 px-4 py-3">
                 <span className="text-sm text-white/60">本周已抵扣</span>
                 <span className="text-2xl font-black text-white/50">
-                  {shareholder.weekly_points.toLocaleString()} 分
+                  {(shareholder.weekly_points || 0).toLocaleString()} 分
                 </span>
               </div>
             ) : (
               <div className="flex items-center justify-between rounded-2xl bg-emerald-400/20 px-4 py-3">
                 <span className="text-sm text-emerald-200">本周剩余可用</span>
                 <span className="text-2xl font-black text-emerald-300">
-                  {shareholder.weekly_points.toLocaleString()} 分
+                  {(shareholder.weekly_points || 0).toLocaleString()} 分
                 </span>
               </div>
             )}
@@ -273,7 +273,7 @@ function PointsScreen() {
             <p className="text-sm text-white/60">{shareholder.share_percent}% {shareholder.tier}</p>
             <p className="text-xs text-white/40 mt-1">实时积分余额</p>
           </div>
-          <p className="text-2xl font-black text-emerald-300">{shareholder.points_balance.toLocaleString()}</p>
+          <p className="text-2xl font-black text-emerald-300">{(shareholder.points_balance || 0).toLocaleString()}</p>
         </div>
       </div>
 
