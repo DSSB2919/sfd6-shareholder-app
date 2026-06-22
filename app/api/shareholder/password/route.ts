@@ -37,7 +37,9 @@ export async function PUT(request: NextRequest) {
     }
 
     // 验证当前密码（明文比较，生产环境应该用 bcrypt）
-    if (shareholder.password_hash !== current_password) {
+    // 如果数据库中没有密码，使用默认密码 "123456"
+    const storedPassword = shareholder.password_hash || '123456';
+    if (storedPassword !== current_password) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
         { status: 401 }
