@@ -89,8 +89,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // 只允许更新特定字段
-    const allowedFields = ['name', 'email', 'phone'];
+    // 允许更新的字段（包括股东编号和推荐码）
+    const allowedFields = ['name', 'email', 'phone', 'member_no', 'referral_code', 'share_percent', 'actual_investment_rm', 'points_balance', 'tier'];
     const filteredData: Record<string, unknown> = {};
     
     for (const key of allowedFields) {
