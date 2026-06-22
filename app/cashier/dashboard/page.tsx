@@ -193,7 +193,7 @@ export default function CashierDashboard() {
     if (result) {
       // 标记本周积分已使用
       try {
-        const weeklyPointsResponse = await fetch('/api/weekly-points/', {
+        const weeklyPointsResponse = await fetch('/api/weekly-points', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

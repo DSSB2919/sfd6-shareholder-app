@@ -47,7 +47,7 @@ export default function AdminShareholders() {
   const fetchShareholders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/shareholders/');
+      const response = await fetch('/api/shareholders');
       if (!response.ok) {
         throw new Error('Failed to fetch shareholders');
       }
@@ -70,7 +70,7 @@ export default function AdminShareholders() {
       
       if (editingId) {
         // Update existing - 调用 API
-        const response = await fetch('/api/shareholder/', {
+        const response = await fetch('/api/shareholder', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -91,7 +91,7 @@ export default function AdminShareholders() {
         ));
       } else {
         // Add new - 调用 API
-        const response = await fetch('/api/shareholders/', {
+        const response = await fetch('/api/shareholders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),

@@ -49,7 +49,7 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
 
     const fetchWeeklyPoints = async () => {
       try {
-        const response = await fetch(`/api/weekly-points/?shareholder_id=${shareholder.id}`);
+        const response = await fetch(`/api/weekly-points?shareholder_id=${shareholder.id}`);
         if (response.ok) {
           const data = await response.json();
           setWeeklyPoints(data);
@@ -667,7 +667,7 @@ function SettingsScreen() {
     setErrorMsg(null);
 
     try {
-      const response = await fetch('/api/shareholder/password/', {
+      const response = await fetch('/api/shareholder/password', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

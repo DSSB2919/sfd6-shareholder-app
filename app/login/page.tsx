@@ -40,7 +40,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/otp/', {
+      const response = await fetch('/api/auth/otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
@@ -90,7 +90,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/otp/verify/', {
+      const response = await fetch('/api/auth/otp/verify', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, code: otp }),
