@@ -6,7 +6,7 @@ import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { StatCard } from '@/components/StatCard';
 import { Icon } from '@/components/Icon';
-import { QRCodeDisplay } from '@/components/QRCodeDisplay';
+
 import { NetworkStatus } from '@/components/NetworkStatus';
 import { BENEFITS, TIERS, ACTIVITY_REWARDS } from '@/types';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, calculateReferralReward, getDeductPointsByTier } from '@/lib/utils';
@@ -40,7 +40,7 @@ function getWeekRange(): string {
 function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void; }) {
   const weekRange = getWeekRange();
   const { shareholder, loading: loadingShareholder, error: shareholderError } = useShareholder();
-  const [showQRLocal, setShowQRLocal] = useState(false);
+
   const [weeklyPoints, setWeeklyPoints] = useState<WeeklyPointsStatus | null>(null);
   const [loadingWeeklyPoints, setLoadingWeeklyPoints] = useState(true);
 
@@ -105,7 +105,7 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
 
   return (
     <div className="pb-24">
-      <Header shareholder={shareholder} onShowQR={() => setShowQRLocal(true)} />
+      <Header shareholder={shareholder} onShowQR={() => {}} />
       
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -164,14 +164,12 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
         </div>
       </div>
 
-      <QRCodeDisplay isOpen={showQRLocal} onClose={() => setShowQRLocal(false)} />
-
       {/* Quick Actions */}
       <div className="mt-6">
         <h3 className="mb-3 text-sm font-bold text-white/80">快速操作</h3>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => setShowQRLocal(true)}
+            onClick={() => {}}
             className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10"
           >
             <div className="rounded-xl bg-emerald-400/20 p-2">
