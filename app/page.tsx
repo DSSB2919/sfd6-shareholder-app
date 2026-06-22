@@ -40,6 +40,7 @@ function getWeekRange(): string {
 function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; onShowQR: () => void; }) {
   const weekRange = getWeekRange();
   const { shareholder, loading: loadingShareholder, error: shareholderError } = useShareholder();
+  const [showQRLocal, setShowQRLocal] = useState(false);
   const [weeklyPoints, setWeeklyPoints] = useState<WeeklyPointsStatus | null>(null);
   const [loadingWeeklyPoints, setLoadingWeeklyPoints] = useState(true);
 
@@ -104,6 +105,8 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
 
   return (
     <div className="pb-24">
+      <Header shareholder={shareholder} onShowQR={() => setShowQRLocal(true)} />
+      
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
@@ -161,12 +164,14 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
         </div>
       </div>
 
+      <QRCodeDisplay isOpen={showQRLocal} onClose={() => setShowQRLocal(false)} />
+
       {/* Quick Actions */}
       <div className="mt-6">
         <h3 className="mb-3 text-sm font-bold text-white/80">快速操作</h3>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={onShowQR}
+            onClick={() => setShowQRLocal(true)}
             className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10"
           >
             <div className="rounded-xl bg-emerald-400/20 p-2">
@@ -197,23 +202,18 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState('home');
-  const [showQR, setShowQR] = useState(false);
 
   return (
     <ShareholderProvider>
       <AuthGuard>
         <div className="flex min-h-screen flex-col bg-zinc-950">
-          <Header />
-          
-          <main className="flex-1 px-5 pt-4">
+          <main className="flex-1">
             {activeTab === 'home' && (
-              <HomeScreen setActive={setActiveTab} onShowQR={() => setShowQR(true)} />
+              <HomeScreen setActive={setActiveTab} onShowQR={() => {}} />
             )}
           </main>
 
           <BottomNav active={activeTab} onChange={setActiveTab} />
-          
-          <QRCodeDisplay isOpen={showQR} onClose={() => setShowQR(false)} />
           <NetworkStatus />
         </div>
       </AuthGuard>
