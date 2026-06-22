@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         .select('*')
         .eq('is_active', true)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (firstError) {
         console.error('Fetch first shareholder error:', firstError);
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .eq('id', shareholderId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Fetch shareholder error:', error);
