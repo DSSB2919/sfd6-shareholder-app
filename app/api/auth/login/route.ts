@@ -129,6 +129,9 @@ export async function POST(request: NextRequest) {
         phone: shareholder.phone,
         share_percent: shareholder.share_percent,
         tier: shareholder.tier,
+        points_balance: shareholder.points_balance ?? 0,
+        weekly_points: shareholder.weekly_points ?? 0,
+        actual_investment_rm: shareholder.actual_investment_rm ?? 0,
       },
     });
   } catch (error) {
