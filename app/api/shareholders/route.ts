@@ -120,3 +120,42 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// PUT /api/shareholders
+// 更新股东信息
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing shareholder id' },
+        { status: 400 }
+      );
+    }
+
+    const { data: updatedShareholder, error } = await supabase
+      .from('shareholders')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Update shareholder error:', error);
+      return NextResponse.json(
+        { error: 'Failed to update shareholder' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(updatedShareholder);
+  } catch (error) {
+    console.error('Shareholders PUT error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

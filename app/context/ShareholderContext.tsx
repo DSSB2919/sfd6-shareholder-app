@@ -81,10 +81,10 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchShareholder();
 
-    // 设置定时刷新（每30秒）和页面可见性变化时刷新
+    // 设置定时刷新（每10秒）和页面可见性变化时刷新
     const intervalId = setInterval(() => {
       fetchShareholder({ silent: true });
-    }, 30000);
+    }, 10000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -94,9 +94,20 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // 监听 storage 事件，当其他标签页修改了 localStorage 时刷新
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'shareholder_updated') {
+        console.log('Shareholder data updated in another tab, refreshing...');
+        fetchShareholder({ silent: true });
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
