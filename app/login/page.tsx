@@ -39,6 +39,7 @@ export default function LoginPage() {
     }
 
     setLoading(true);
+    console.log('Sending OTP request to /api/auth/otp with phone:', phone);
     try {
       const response = await fetch('/api/auth/otp', {
         method: 'POST',
@@ -46,7 +47,9 @@ export default function LoginPage() {
         body: JSON.stringify({ phone }),
       });
 
+      console.log('OTP response status:', response.status);
       const data = await response.json();
+      console.log('OTP response data:', data);
 
       if (!response.ok) {
         alert(data.error || '发送失败');
