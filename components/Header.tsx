@@ -54,7 +54,7 @@ export function Header({ shareholder, onShowQR }: HeaderProps) {
               {shareholder.share_percent}% Shareholding · {formatRM(shareholder.actual_investment_rm)} Capital Injection
             </p>
             <p className="mt-1 text-sm text-emerald-300">
-              {shareholder.points_balance.toLocaleString()} Snow Points · Founding Circle Privilege
+              {(shareholder.points_balance || 0).toLocaleString()} Snow Points · Founding Circle Privilege
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">

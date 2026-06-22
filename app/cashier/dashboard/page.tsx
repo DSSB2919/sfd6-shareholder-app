@@ -401,7 +401,7 @@ export default function CashierDashboard() {
               <div className="mt-4 flex items-center justify-between rounded-2xl bg-zinc-950/50 px-4 py-3">
                 <span className="text-sm text-white/60">可用积分</span>
                 <span className="text-lg font-bold text-emerald-300">
-                  {scannedData.shareholder.points_balance.toLocaleString()}
+                  {(scannedData.shareholder.points_balance || 0).toLocaleString()}
                 </span>
               </div>
               {scannedData.is_referral && (

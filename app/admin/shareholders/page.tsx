@@ -243,7 +243,7 @@ export default function AdminShareholders() {
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs text-white/50">总积分发放</p>
                 <p className="mt-1 text-2xl font-bold text-emerald-300">
-                  {shareholders.reduce((sum, s) => sum + s.points_balance, 0).toLocaleString()}
+                  {shareholders.reduce((sum, s) => sum + (s.points_balance || 0), 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -296,7 +296,7 @@ export default function AdminShareholders() {
                 </div>
                 <div className="text-right">
                   <p className="text-lg font-bold text-emerald-300">
-                    {shareholder.points_balance.toLocaleString()}
+                    {(shareholder.points_balance || 0).toLocaleString()}
                   </p>
                   <p className="text-xs text-white/50">积分</p>
                 </div>
