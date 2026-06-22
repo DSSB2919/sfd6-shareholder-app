@@ -28,35 +28,60 @@ export async function POST(request: NextRequest) {
     }
 
     // 查找股东（支持多种手机号格式）
-    let { data: shareholder, error: shareholderError } = await supabase
+    let shareholder = null;
+    
+    // 1. 尝试精确匹配
+    const { data: exactMatch, error: exactError } = await supabase
       .from('shareholders')
       .select('*')
       .eq('phone', phone)
-      .single();
-
-    // 如果没找到，尝试不带 +60 的格式
+      .maybeSingle();
+    
+    if (exactMatch) {
+      shareholder = exactMatch;
+    }
+    
+    // 2. 如果没找到，尝试不带 +60 的格式
     if (!shareholder && phone.startsWith('+60')) {
       const phoneWithoutPrefix = phone.slice(3);
-      const result = await supabase
+      const { data: noPrefixMatch, error: noPrefixError } = await supabase
         .from('shareholders')
         .select('*')
         .eq('phone', phoneWithoutPrefix)
-        .single();
-      shareholder = result.data;
-      shareholderError = result.error;
+        .maybeSingle();
+      
+      if (noPrefixMatch) {
+        shareholder = noPrefixMatch;
+      }
     }
 
-    // 还是没找到，尝试匹配后 9 位数字
+    // 3. 还是没找到，尝试匹配后 9-10 位数字
     if (!shareholder) {
       const numericPhone = phone.replace(/\D/g, '');
-      const last9Digits = numericPhone.slice(-9);
-      const result = await supabase
+      const lastDigits = numericPhone.slice(-10); // 取后10位
+      const { data: fuzzyMatch, error: fuzzyError } = await supabase
         .from('shareholders')
         .select('*')
-        .ilike('phone', `%${last9Digits}`)
-        .single();
-      shareholder = result.data;
-      shareholderError = result.error;
+        .ilike('phone', `%${lastDigits}`)
+        .maybeSingle();
+      
+      if (fuzzyMatch) {
+        shareholder = fuzzyMatch;
+      }
+    }
+    
+    // 4. 最后尝试用 contains 匹配
+    if (!shareholder) {
+      const numericPhone = phone.replace(/\D/g, '');
+      const { data: containsMatch, error: containsError } = await supabase
+        .from('shareholders')
+        .select('*')
+        .ilike('phone', `%${numericPhone}%`)
+        .maybeSingle();
+      
+      if (containsMatch) {
+        shareholder = containsMatch;
+      }
     }
 
     if (!shareholder) {
