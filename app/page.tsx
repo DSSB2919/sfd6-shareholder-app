@@ -129,7 +129,7 @@ function HomeScreen({ setActive, onShowQR }: { setActive: (id: string) => void; 
             <div>
               <div className="flex items-center gap-2">
                 <Icon name="gift" className="h-5 w-5 text-amber-300" />
-                <span className="text-sm text-amber-300">本周抵扣额度</span>
+                <span className="text-sm text-amber-300">股东每周赠送福利</span>
               </div>
               <p className="mt-1 text-sm text-white/60">{weekRange}</p>
             </div>
