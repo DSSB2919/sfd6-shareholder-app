@@ -118,11 +118,57 @@ export default function CashierDashboard() {
   const handleManualSubmit = async () => {
     if (!qrInput.trim()) return;
     setScanning(true);
-    const success = await processQRData(qrInput.trim());
-    setScanning(false);
-    if (success) {
+    try {
+      const token = decodeQRToken(qrInput.trim());
+      
+      if (!token) {
+        alert('无效的二维码格式');
+        setScanning(false);
+        return;
+      }
+      
+      const validation = validateQRToken(token);
+      
+      if (!validation.valid) {
+        alert('二维码无效或已过期: ' + validation.error);
+        setScanning(false);
+        return;
+      }
+      
+      const response = await fetch(`/api/shareholder?id=${token.shareholderId}`);
+      if (!response.ok) {
+        alert('无法获取股东信息');
+        setScanning(false);
+        return;
+      }
+      
+      const shareholder = await response.json();
+      
+      // Directly set state here instead of using processQRData
+      setScannedData({
+        type: token.type,
+        shareholder: {
+          id: token.shareholderId,
+          name: shareholder.name,
+          member_no: shareholder.member_no,
+          tier: shareholder.tier,
+          points_balance: shareholder.points_balance,
+        },
+        family_card: token.familyCardId ? {
+          id: token.familyCardId,
+          name: token.familyName || '',
+          relationship: token.relationship || 'child',
+        } : undefined,
+        is_referral: token.type === 'referral',
+      });
+      
       setQrInput('');
       setShowManualInput(false);
+    } catch (error) {
+      console.error('QR processing error:', error);
+      alert('二维码处理失败');
+    } finally {
+      setScanning(false);
     }
   };
 
