@@ -25,11 +25,10 @@ export function Header({ shareholder, onShowQR }: HeaderProps) {
           <img 
             src="/logo.png" 
             alt="逛夜谷" 
-            className="h-12 w-12 object-contain rounded-xl"
+            className="h-10 w-10 object-contain rounded-lg bg-white/10 p-1"
           />
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Kluang Night Valley</p>
-            <h1 className="mt-1 text-xl font-black leading-tight">逛夜谷股东系统</h1>
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">SFD6 Shareholder Lifestyle</p>
             <p className="mt-1 text-sm text-white/60">
               {shareholder.share_percent}% 股东 · {shareholder.tier}
             </p>

@@ -88,12 +88,12 @@ export default function LoginPage() {
           <div className="flex flex-col items-center">
             <img 
               src="/logo.png" 
-              alt="逛夜谷 Kluang Night Valley" 
-              className="h-32 w-32 object-contain rounded-2xl"
+              alt="逛夜谷" 
+              className="h-20 w-20 object-contain rounded-xl bg-white/10 p-2"
             />
             <div className="mt-4 text-center">
-              <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Kluang Night Valley</p>
-              <h1 className="text-xl font-black text-white">逛夜谷股东系统</h1>
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">SFD6 Shareholder Lifestyle</p>
+              <h1 className="text-xl font-black text-white">股东登录</h1>
             </div>
           </div>
           
