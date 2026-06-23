@@ -65,8 +65,21 @@ export default function AdminShareholders() {
 
   const handleSubmit = async () => {
     try {
-      // 开发环境：直接操作本地状态
-      const isDev = process.env.NODE_ENV === 'development';
+      // 验证必填字段
+      if (!formData.name.trim()) {
+        alert('请输入股东姓名');
+        return;
+      }
+      if (!formData.phone.trim()) {
+        alert('请输入手机号');
+        return;
+      }
+      if (formData.share_percent <= 0) {
+        alert('股份百分比必须大于0');
+        return;
+      }
+
+      console.log('Submitting form data:', formData);
       
       if (editingId) {
         // Update existing - 调用 API
@@ -91,23 +104,33 @@ export default function AdminShareholders() {
         ));
       } else {
         // Add new - 调用 API
+        console.log('Creating new shareholder with data:', {
+          name: formData.name,
+          phone: formData.phone,
+          share_percent: formData.share_percent,
+          actual_investment_rm: formData.actual_investment_rm,
+          points_balance: formData.points_balance,
+        });
+        
         const response = await fetch('/api/shareholders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
 
+        const responseData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.log('API response:', response.status, responseData);
+
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-          alert(`保存失败: ${errorData.error}`);
+          alert(`保存失败: ${responseData.error || '未知错误'}`);
           return;
         }
 
-        const newShareholder = await response.json();
-        setShareholders([newShareholder, ...shareholders]);
+        setShareholders([responseData, ...shareholders]);
       }
       closeModal();
     } catch (err) {
+      console.error('Submit error:', err);
       alert('操作失败，请重试');
     }
   };

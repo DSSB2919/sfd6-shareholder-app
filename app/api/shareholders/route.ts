@@ -81,14 +81,17 @@ export async function POST(request: NextRequest) {
                         share_percent >= 3 ? 50 : 30;
 
     // 准备插入数据
+    // 确保 share_percent 是数字类型（支持小数）
+    const sharePercentNum = parseFloat(String(share_percent));
+    
     const insertData = {
       member_no: memberNo,
       name,
       phone,
       email: email || null,
-      share_percent,
-      actual_investment_rm: actual_investment_rm || Math.round(share_percent * 9600),
-      points_balance: points_balance || actual_investment_rm || Math.round(share_percent * 9600),
+      share_percent: sharePercentNum,
+      actual_investment_rm: actual_investment_rm || Math.round(sharePercentNum * 9600),
+      points_balance: points_balance || actual_investment_rm || Math.round(sharePercentNum * 9600),
       tier,
       weekly_points: weeklyPoints,
       referral_code: `${memberNo}-2026`,
