@@ -37,11 +37,6 @@ export default function CashierDashboard() {
   const [alcoholInput, setAlcoholInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Debug: log scannedData changes
-  useEffect(() => {
-    console.log('scannedData changed:', scannedData);
-  }, [scannedData]);
-
   // Process scanned QR code data
   const processQRData = async (qrData: string) => {
     try {
@@ -122,59 +117,69 @@ export default function CashierDashboard() {
   
   const handleManualSubmit = async () => {
     if (!qrInput.trim()) return;
-    setScanning(true);
-    try {
-      const token = decodeQRToken(qrInput.trim());
-      
-      if (!token) {
-        alert('无效的二维码格式');
-        setScanning(false);
-        return;
-      }
-      
-      const validation = validateQRToken(token);
-      
-      if (!validation.valid) {
-        alert('二维码无效或已过期: ' + validation.error);
-        setScanning(false);
-        return;
-      }
-      
-      const response = await fetch(`/api/shareholder?id=${token.shareholderId}`);
-      if (!response.ok) {
-        alert('无法获取股东信息');
-        setScanning(false);
-        return;
-      }
-      
-      const shareholder = await response.json();
-      
-      // Directly set state here instead of using processQRData
-      setScannedData({
-        type: token.type,
-        shareholder: {
-          id: token.shareholderId,
-          name: shareholder.name,
-          member_no: shareholder.member_no,
-          tier: shareholder.tier,
-          points_balance: shareholder.points_balance,
-        },
-        family_card: token.familyCardId ? {
-          id: token.familyCardId,
-          name: token.familyName || '',
-          relationship: token.relationship || 'child',
-        } : undefined,
-        is_referral: token.type === 'referral',
-      });
-      
-      setQrInput('');
-      setShowManualInput(false);
-    } catch (error) {
-      console.error('QR processing error:', error);
-      alert('二维码处理失败');
-    } finally {
-      setScanning(false);
+    
+    const qrData = qrInput.trim();
+    console.log('Processing QR data:', qrData);
+    
+    // Parse QR token
+    const token = decodeQRToken(qrData);
+    console.log('Decoded token:', token);
+    
+    if (!token) {
+      alert('无效的二维码格式');
+      return;
     }
+    
+    // Validate token
+    const validation = validateQRToken(token);
+    console.log('Validation result:', validation);
+    
+    if (!validation.valid) {
+      alert('二维码无效或已过期: ' + validation.error);
+      return;
+    }
+    
+    // Fetch shareholder data
+    console.log('Fetching shareholder:', token.shareholderId);
+    const response = await fetch(`/api/shareholder?id=${token.shareholderId}`);
+    console.log('API response status:', response.status);
+    
+    if (!response.ok) {
+      alert('无法获取股东信息');
+      return;
+    }
+    
+    const shareholder = await response.json();
+    console.log('Shareholder data:', shareholder);
+    
+    // Create scanned data object
+    const newScannedData: ScannedData = {
+      type: token.type,
+      shareholder: {
+        id: token.shareholderId,
+        name: shareholder.name,
+        member_no: shareholder.member_no,
+        tier: shareholder.tier,
+        points_balance: shareholder.points_balance,
+      },
+      family_card: token.familyCardId ? {
+        id: token.familyCardId,
+        name: token.familyName || '',
+        relationship: token.relationship || 'child',
+      } : undefined,
+      is_referral: token.type === 'referral',
+    };
+    
+    console.log('Setting scannedData:', newScannedData);
+    
+    // Reset form and set data
+    setQrInput('');
+    setShowManualInput(false);
+    
+    // Set scanned data - this should trigger re-render
+    setScannedData(newScannedData);
+    
+    console.log('scannedData set, should re-render');
   };
 
   // 根据股东等级计算抵扣（每RM100为单位）
