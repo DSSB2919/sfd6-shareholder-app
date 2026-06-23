@@ -13,6 +13,7 @@ const items = [
   { id: 'points', label: '积分', icon: 'wallet' },
   { id: 'benefits', label: '福利', icon: 'crown' },
   { id: 'referral', label: '带客', icon: 'users' },
+  { id: 'family', label: '家属', icon: 'heart' },
   { id: 'settings', label: '设置', icon: 'settings' },
 ];
 

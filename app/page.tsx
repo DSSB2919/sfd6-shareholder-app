@@ -955,6 +955,7 @@ function AppContent() {
       {active === 'points' && <PointsScreen />}
       {active === 'benefits' && <BenefitsScreen />}
       {active === 'referral' && <ReferralScreen onShowReferralQR={() => setShowReferralQR(true)} />}
+      {active === 'family' && <FamilyQRScreen />}
       {active === 'settings' && <SettingsScreen />}
       <BottomNav active={active} setActive={setActive} />
 
