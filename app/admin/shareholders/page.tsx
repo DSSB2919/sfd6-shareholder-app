@@ -367,13 +367,20 @@ export default function AdminShareholders() {
                     { share: 5, label: '5%', desc: 'Strategic' },
                     { share: 10, label: '10%', desc: 'Core' },
                     { share: 20, label: '20%', desc: 'Founding' },
-                    { share: 0, label: '自定义', desc: 'Other' },
+                    { share: -1, label: '自定义', desc: 'Other' },
                   ].map((option) => (
                     <button
                       key={option.share}
                       type="button"
                       onClick={() => {
-                        if (option.share === 0) return; // 自定义不处理
+                        if (option.share === -1) {
+                          // 自定义模式 - 不清除当前值，只标记为自定义
+                          setFormData({
+                            ...formData,
+                            share_percent: parseFloat(sharePercentInput) || 0,
+                          });
+                          return;
+                        }
                         const investment = option.share * 9600;
                         setSharePercentInput(String(option.share));
                         setFormData({
@@ -384,9 +391,11 @@ export default function AdminShareholders() {
                         });
                       }}
                       className={`rounded-xl px-3 py-2 text-xs transition ${
-                        formData.share_percent === option.share
+                        (option.share === -1 && ![1, 3, 5, 10, 20].includes(formData.share_percent))
                           ? 'bg-emerald-400 text-zinc-950 font-bold'
-                          : 'bg-white/10 text-white hover:bg-white/20'
+                          : formData.share_percent === option.share
+                            ? 'bg-emerald-400 text-zinc-950 font-bold'
+                            : 'bg-white/10 text-white hover:bg-white/20'
                       }`}
                     >
                       <div>{option.label}</div>
@@ -406,8 +415,8 @@ export default function AdminShareholders() {
                     onChange={(e) => {
                       // 允许输入小数
                       const value = e.target.value;
-                      // 只允许数字和小数点
-                      if (/^\d*\.?\d*$/.test(value)) {
+                      // 只允许数字和小数点，最多3位小数
+                      if (/^\d*\.?\d{0,3}$/.test(value)) {
                         setSharePercentInput(value);
                         const share = parseFloat(value) || 0;
                         const investment = Math.round(share * 9600);
@@ -418,6 +427,18 @@ export default function AdminShareholders() {
                           points_balance: investment,
                         });
                       }
+                    }}
+                    onBlur={(e) => {
+                      // 失去焦点时格式化数字
+                      const share = parseFloat(e.target.value) || 0;
+                      setSharePercentInput(String(share));
+                      const investment = Math.round(share * 9600);
+                      setFormData({
+                        ...formData,
+                        share_percent: share,
+                        actual_investment_rm: investment,
+                        points_balance: investment,
+                      });
                     }}
                     placeholder="如: 15.294"
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/30 focus:border-emerald-400 focus:outline-none"
