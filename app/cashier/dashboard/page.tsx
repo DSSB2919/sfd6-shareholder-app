@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, getDeductPointsByTier } from '@/lib/utils';
@@ -37,6 +37,58 @@ export default function CashierDashboard() {
   const [alcoholInput, setAlcoholInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Process scanned QR code data
+  const processQRData = async (qrData: string) => {
+    try {
+      // Try to parse the QR data as JSON
+      const token = decodeQRToken(qrData);
+      
+      if (!token) {
+        alert('无效的二维码格式');
+        return false;
+      }
+      
+      // Validate the token
+      const validation = validateQRToken(token);
+      
+      if (!validation.valid) {
+        alert('二维码无效或已过期: ' + validation.error);
+        return false;
+      }
+      
+      // Fetch shareholder data from database
+      const response = await fetch(`/api/shareholder?id=${token.shareholderId}`);
+      if (!response.ok) {
+        alert('无法获取股东信息');
+        return false;
+      }
+      
+      const shareholder = await response.json();
+      
+      setScannedData({
+        type: token.type,
+        shareholder: {
+          id: token.shareholderId,
+          name: shareholder.name,
+          member_no: shareholder.member_no,
+          tier: shareholder.tier,
+          points_balance: shareholder.points_balance,
+        },
+        family_card: token.familyCardId ? {
+          id: token.familyCardId,
+          name: token.familyName || '',
+          relationship: token.relationship || 'child',
+        } : undefined,
+        is_referral: token.type === 'referral',
+      });
+      return true;
+    } catch (error) {
+      console.error('QR processing error:', error);
+      alert('二维码处理失败');
+      return false;
+    }
+  };
+
   // Mock scan function - in production, this would use a QR scanner
   const handleScan = () => {
     setScanning(true);
@@ -45,7 +97,7 @@ export default function CashierDashboard() {
       // For demo, create a mock QR token
       const mockToken: QRToken = {
         shareholderId: 1,
-        shareholderName: 'MR. LEE WEN CHUIN',
+        shareholderName: 'KOK CHIEN FUI',
         memberNo: 'SFD6-FP-001',
         type: 'self',
         timestamp: Date.now(),
@@ -53,33 +105,25 @@ export default function CashierDashboard() {
         signature: 'mock-signature',
       };
       
-      // Validate the token
-      const validation = validateQRToken(mockToken);
-      
-      if (!validation.valid) {
-        alert('二维码无效或已过期: ' + validation.error);
-        setScanning(false);
-        return;
-      }
-      
-      setScannedData({
-        type: mockToken.type,
-        shareholder: {
-          id: mockToken.shareholderId,
-          name: mockToken.shareholderName,
-          member_no: mockToken.memberNo,
-          tier: 'Founding Partner',
-          points_balance: 185000,
-        },
-        family_card: mockToken.familyCardId ? {
-          id: mockToken.familyCardId,
-          name: mockToken.familyName || '',
-          relationship: mockToken.relationship || 'child',
-        } : undefined,
-        is_referral: mockToken.type === 'referral',
-      });
+      // Use the process function
+      processQRData(JSON.stringify(mockToken));
       setScanning(false);
     }, 2000);
+  };
+
+  // Handle manual QR input (for testing)
+  const [qrInput, setQrInput] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  
+  const handleManualSubmit = async () => {
+    if (!qrInput.trim()) return;
+    setScanning(true);
+    const success = await processQRData(qrInput.trim());
+    setScanning(false);
+    if (success) {
+      setQrInput('');
+      setShowManualInput(false);
+    }
   };
 
   // 根据股东等级计算抵扣（每RM100为单位）
@@ -278,8 +322,39 @@ export default function CashierDashboard() {
               disabled={scanning}
               className="w-full rounded-2xl bg-amber-400 py-5 text-lg font-bold text-zinc-950 transition hover:bg-amber-300 disabled:opacity-50"
             >
-              {scanning ? '扫描中...' : '开始扫描'}
+              {scanning ? '扫描中...' : '开始扫描 (测试)'}
             </button>
+
+            {/* Manual QR Input Toggle */}
+            <button
+              onClick={() => setShowManualInput(!showManualInput)}
+              className="w-full rounded-2xl border border-white/20 bg-transparent py-3 text-sm font-medium text-white/60 transition hover:bg-white/5"
+            >
+              {showManualInput ? '隐藏手动输入' : '手动输入二维码数据 (测试)'}
+            </button>
+
+            {/* Manual QR Input */}
+            {showManualInput && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="space-y-3"
+              >
+                <textarea
+                  value={qrInput}
+                  onChange={(e) => setQrInput(e.target.value)}
+                  placeholder="粘贴二维码JSON数据..."
+                  className="w-full h-32 rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3 text-xs text-white placeholder:text-white/30 focus:border-amber-400 focus:outline-none font-mono"
+                />
+                <button
+                  onClick={handleManualSubmit}
+                  disabled={scanning || !qrInput.trim()}
+                  className="w-full rounded-2xl bg-emerald-400/20 py-3 text-sm font-bold text-emerald-300 transition hover:bg-emerald-400/30 disabled:opacity-50"
+                >
+                  {scanning ? '处理中...' : '提交二维码'}
+                </button>
+              </motion.div>
+            )}
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h3 className="font-bold text-white">使用说明</h3>
