@@ -116,10 +116,16 @@ export default function CashierDashboard() {
   const [showManualInput, setShowManualInput] = useState(false);
   
   const handleManualSubmit = async () => {
-    if (!qrInput.trim()) return;
+    // Get value directly from textarea to avoid React state sync issues
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    const qrData = textarea?.value?.trim() || qrInput.trim();
     
-    const qrData = qrInput.trim();
     console.log('Processing QR data:', qrData);
+    
+    if (!qrData) {
+      alert('请输入二维码数据');
+      return;
+    }
     
     // Parse QR token
     const token = decodeQRToken(qrData);
@@ -172,11 +178,12 @@ export default function CashierDashboard() {
     
     console.log('Setting scannedData:', newScannedData);
     
-    // Reset form and set data
+    // Reset form
     setQrInput('');
+    if (textarea) textarea.value = '';
     setShowManualInput(false);
     
-    // Set scanned data - this should trigger re-render
+    // Set scanned data - this triggers re-render to show input mode
     setScannedData(newScannedData);
     
     console.log('scannedData set, should re-render');
