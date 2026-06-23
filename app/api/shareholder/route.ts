@@ -7,65 +7,91 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/shareholder
 // 获取当前登录股东信息
-// 实际项目中应该通过 JWT token 或 session 识别用户
+// 支持两种方式：1. 通过 id 参数指定股东 2. 通过 phone 参数获取当前登录股东
 export async function GET(request: NextRequest) {
   try {
-    // TODO: 从 JWT token 或 session 中获取当前用户ID
-    // 临时使用 shareholder_id 参数，实际应该通过认证信息获取
     const { searchParams } = new URL(request.url);
     const shareholderId = searchParams.get('id');
+    const phone = searchParams.get('phone');
 
-    if (!shareholderId) {
-      // 如果没有提供ID，返回第一个股东（仅用于开发测试）
-      const { data: firstShareholder, error: firstError } = await supabase
+    // 如果提供了ID，直接查询指定股东
+    if (shareholderId) {
+      const { data: shareholder, error } = await supabase
         .from('shareholders')
         .select('*')
+        .eq('id', shareholderId)
         .eq('is_active', true)
-        .limit(1)
         .maybeSingle();
 
-      if (firstError) {
-        console.error('Fetch first shareholder error:', firstError);
+      if (error) {
+        console.error('Fetch shareholder error:', error);
         return NextResponse.json(
           { error: 'Failed to fetch shareholder' },
           { status: 500 }
         );
       }
 
-      if (!firstShareholder) {
+      if (!shareholder) {
         return NextResponse.json(
-          { error: 'No active shareholder found' },
+          { error: 'Shareholder not found' },
           { status: 404 }
         );
       }
 
-      return NextResponse.json(firstShareholder);
+      return NextResponse.json(shareholder);
     }
 
-    // 查询指定股东
-    const { data: shareholder, error } = await supabase
+    // 如果提供了手机号，查询对应股东（用于股东端获取当前登录用户）
+    if (phone) {
+      const { data: shareholder, error } = await supabase
+        .from('shareholders')
+        .select('*')
+        .eq('phone', phone)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Fetch shareholder by phone error:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch shareholder' },
+          { status: 500 }
+        );
+      }
+
+      if (!shareholder) {
+        return NextResponse.json(
+          { error: 'Shareholder not found' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json(shareholder);
+    }
+
+    // 如果没有提供任何参数，返回第一个股东（仅用于开发测试）
+    const { data: firstShareholder, error: firstError } = await supabase
       .from('shareholders')
       .select('*')
-      .eq('id', shareholderId)
       .eq('is_active', true)
+      .limit(1)
       .maybeSingle();
 
-    if (error) {
-      console.error('Fetch shareholder error:', error);
+    if (firstError) {
+      console.error('Fetch first shareholder error:', firstError);
       return NextResponse.json(
         { error: 'Failed to fetch shareholder' },
         { status: 500 }
       );
     }
 
-    if (!shareholder) {
+    if (!firstShareholder) {
       return NextResponse.json(
-        { error: 'Shareholder not found' },
+        { error: 'No active shareholder found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(shareholder);
+    return NextResponse.json(firstShareholder);
   } catch (error) {
     console.error('Shareholder GET error:', error);
     return NextResponse.json(

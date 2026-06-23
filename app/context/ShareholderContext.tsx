@@ -25,6 +25,9 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
         setLoading(true);
       }
 
+      // 获取当前登录用户的手机号
+      const phone = localStorage.getItem('shareholder_phone');
+      
       // 首先尝试从 localStorage 获取（快速显示）
       const storedShareholder = localStorage.getItem('shareholder');
       const hasCache = storedShareholder && !options?.silent;
@@ -40,7 +43,9 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
       }
 
       // 从 API 获取最新数据（总是执行，确保数据同步）
-      const response = await fetch('/api/shareholder');
+      // 使用手机号查询当前登录股东，确保获取正确的数据
+      const apiUrl = phone ? `/api/shareholder?phone=${encodeURIComponent(phone)}` : '/api/shareholder';
+      const response = await fetch(apiUrl);
       if (!response.ok) {
         // 如果 API 失败但有缓存，保留缓存数据，只记录错误
         if (!hasCache) {
@@ -74,6 +79,7 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('shareholder');
+    localStorage.removeItem('shareholder_phone');
     setShareholder(null);
     window.location.href = '/login';
   };
@@ -81,10 +87,10 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     fetchShareholder();
 
-    // 设置定时刷新（每10秒）和页面可见性变化时刷新
+    // 设置定时刷新（每5秒）和页面可见性变化时刷新
     const intervalId = setInterval(() => {
       fetchShareholder({ silent: true });
-    }, 10000);
+    }, 5000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -104,10 +110,18 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
 
     window.addEventListener('storage', handleStorageChange);
 
+    // 监听页面点击事件，用户操作时刷新数据
+    const handleUserInteraction = () => {
+      fetchShareholder({ silent: true });
+    };
+
+    document.addEventListener('click', handleUserInteraction);
+
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('click', handleUserInteraction);
     };
   }, []);
 

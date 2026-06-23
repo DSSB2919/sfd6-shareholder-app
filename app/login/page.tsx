@@ -57,9 +57,10 @@ export default function LoginPage() {
         return;
       }
 
-      // 保存 token 和股东信息
+      // 保存 token、股东信息和手机号
       localStorage.setItem('token', data.token);
       localStorage.setItem('shareholder', JSON.stringify(data.shareholder));
+      localStorage.setItem('shareholder_phone', data.shareholder.phone);
 
       // 跳转到首页
       window.location.href = '/';
