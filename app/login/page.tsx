@@ -89,13 +89,16 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
           className="relative"
         >
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-white/10 p-3">
-              <Icon name="snow" className="h-8 w-8 text-emerald-300" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Snowy Fox</p>
-              <h1 className="text-xl font-black text-white">Shareholder Lifestyle</h1>
+          {/* Logo */}
+          <div className="flex flex-col items-center">
+            <img 
+              src="/logo.png" 
+              alt="逛夜谷 Kluang Night Valley" 
+              className="h-32 w-32 object-contain rounded-2xl"
+            />
+            <div className="mt-4 text-center">
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Kluang Night Valley</p>
+              <h1 className="text-xl font-black text-white">逛夜谷股东系统</h1>
             </div>
           </div>
           
