@@ -37,6 +37,11 @@ export default function CashierDashboard() {
   const [alcoholInput, setAlcoholInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Debug: log scannedData changes
+  useEffect(() => {
+    console.log('scannedData changed:', scannedData);
+  }, [scannedData]);
+
   // Process scanned QR code data
   const processQRData = async (qrData: string) => {
     try {
