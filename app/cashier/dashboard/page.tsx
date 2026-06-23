@@ -114,6 +114,7 @@ export default function CashierDashboard() {
   // Handle manual QR input (for testing)
   const [qrInput, setQrInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(0);
   
   const handleManualSubmit = async () => {
     // Get value directly from textarea to avoid React state sync issues
@@ -185,6 +186,9 @@ export default function CashierDashboard() {
     
     // Set scanned data - this triggers re-render to show input mode
     setScannedData(newScannedData);
+    
+    // Force re-render
+    setForceUpdate(prev => prev + 1);
     
     console.log('scannedData set, should re-render');
   };
