@@ -57,7 +57,12 @@ export default function LoginPage() {
         return;
       }
 
-      // 保存 token、股东信息和手机号
+      // 先清除旧的缓存数据
+      localStorage.removeItem('shareholder');
+      localStorage.removeItem('shareholder_phone');
+      localStorage.removeItem('token');
+      
+      // 保存新的 token、股东信息和手机号
       localStorage.setItem('token', data.token);
       localStorage.setItem('shareholder', JSON.stringify(data.shareholder));
       localStorage.setItem('shareholder_phone', data.shareholder.phone);
