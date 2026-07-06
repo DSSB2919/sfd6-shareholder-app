@@ -89,25 +89,24 @@ export default function CashierDashboard() {
     }
   };
 
-  // Mock scan function - in production, this would use a QR scanner
+  // Generate a valid test QR token using the same algorithm as shareholder app
   const handleScan = () => {
     setScanning(true);
     // Simulate scanning delay
     setTimeout(() => {
-      // For demo, create a mock QR token
-      const mockToken: QRToken = {
-        shareholderId: 1,
-        shareholderName: 'KOK CHIEN FUI',
-        memberNo: 'SFD6-FP-001',
-        type: 'self',
-        timestamp: Date.now(),
-        expiryMinutes: 5,
-        signature: 'mock-signature',
-      };
-      
-      // Use the process function
-      processQRData(JSON.stringify(mockToken));
-      setScanning(false);
+      // Generate a valid QR token using the generateQRToken function
+      import('@/lib/qr-code').then(({ generateQRToken }) => {
+        const testToken = generateQRToken(
+          1,
+          'KOK CHIEN FUI',
+          'SFD6-FP-001',
+          'self'
+        );
+        
+        // Use the process function
+        processQRData(JSON.stringify(testToken));
+        setScanning(false);
+      });
     }, 2000);
   };
 
@@ -389,7 +388,7 @@ export default function CashierDashboard() {
               disabled={scanning}
               className="w-full rounded-2xl bg-amber-400 py-5 text-lg font-bold text-zinc-950 transition hover:bg-amber-300 disabled:opacity-50"
             >
-              {scanning ? '扫描中...' : '开始扫描 (测试)'}
+              {scanning ? '扫描中...' : '开始扫描'}
             </button>
 
             {/* Manual QR Input Toggle */}

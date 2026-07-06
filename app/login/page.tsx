@@ -61,11 +61,23 @@ export default function LoginPage() {
       localStorage.removeItem('shareholder');
       localStorage.removeItem('shareholder_phone');
       localStorage.removeItem('token');
+      localStorage.removeItem('token_expiry');
       
       // 保存新的 token、股东信息和手机号
       localStorage.setItem('token', data.token);
       localStorage.setItem('shareholder', JSON.stringify(data.shareholder));
       localStorage.setItem('shareholder_phone', data.shareholder.phone);
+      
+      // 解析 token 获取过期时间并保存
+      try {
+        const payload = JSON.parse(atob(data.token));
+        if (payload.exp) {
+          localStorage.setItem('token_expiry', payload.exp.toString());
+        }
+      } catch {
+        // 解析失败，使用默认 10 分钟后过期
+        localStorage.setItem('token_expiry', (Date.now() + 10 * 60 * 1000).toString());
+      }
 
       // 跳转到首页
       window.location.href = '/';

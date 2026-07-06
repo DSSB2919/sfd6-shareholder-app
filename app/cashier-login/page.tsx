@@ -16,14 +16,48 @@ export default function CashierLoginPage() {
     }
     
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // In real implementation, verify credentials and get JWT token
-    console.log('Cashier login', username);
-    
-    // Redirect to cashier dashboard
-    window.location.href = '/cashier/dashboard';
+    try {
+      const response = await fetch('/api/auth/cashier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || '登录失败');
+        return;
+      }
+
+      // 清除旧数据
+      localStorage.removeItem('cashier_token');
+      localStorage.removeItem('cashier');
+      localStorage.removeItem('cashier_token_expiry');
+      
+      // 保存新的 token 和收银员信息
+      localStorage.setItem('cashier_token', data.token);
+      localStorage.setItem('cashier', JSON.stringify(data.cashier));
+      
+      // 解析 token 获取过期时间并保存
+      try {
+        const payload = JSON.parse(atob(data.token));
+        if (payload.exp) {
+          localStorage.setItem('cashier_token_expiry', payload.exp.toString());
+        }
+      } catch {
+        // 解析失败，使用默认 10 分钟后过期
+        localStorage.setItem('cashier_token_expiry', (Date.now() + 10 * 60 * 1000).toString());
+      }
+
+      // 跳转到收银台
+      window.location.href = '/cashier/dashboard';
+    } catch (err) {
+      alert('网络错误，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

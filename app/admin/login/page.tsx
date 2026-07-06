@@ -33,8 +33,21 @@ export default function AdminLogin() {
         return;
       }
 
-      // 保存 token
+      // 清除旧数据
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_token_expiry');
+      
+      // 保存 token 和过期时间
       localStorage.setItem('admin_token', data.token);
+      try {
+        const payload = JSON.parse(atob(data.token));
+        if (payload.exp) {
+          localStorage.setItem('admin_token_expiry', payload.exp.toString());
+        }
+      } catch {
+        localStorage.setItem('admin_token_expiry', (Date.now() + 10 * 60 * 1000).toString());
+      }
+      
       // 跳转到管理后台
       window.location.href = '/admin';
     } catch {

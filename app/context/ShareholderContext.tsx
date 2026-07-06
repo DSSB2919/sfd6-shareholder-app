@@ -25,6 +25,12 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
         setLoading(true);
       }
 
+      // 检查 Token 是否过期
+      if (!checkTokenExpiry()) {
+        setLoading(false);
+        return;
+      }
+
       // 获取当前登录用户的手机号
       const phone = localStorage.getItem('shareholder_phone');
       
@@ -80,15 +86,64 @@ export function ShareholderProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token');
     localStorage.removeItem('shareholder');
     localStorage.removeItem('shareholder_phone');
+    localStorage.removeItem('token_expiry');
     setShareholder(null);
     window.location.href = '/login';
   };
 
+  // 检查 Token 是否过期
+  const checkTokenExpiry = () => {
+    const token = localStorage.getItem('token');
+    const expiryStr = localStorage.getItem('token_expiry');
+    
+    if (!token) return false;
+
+    const now = Date.now();
+    
+    // 优先使用存储的过期时间
+    if (expiryStr) {
+      const expiry = parseInt(expiryStr, 10);
+      if (expiry < now) {
+        console.log('Token expired (from storage), logging out...');
+        logout();
+        return false;
+      }
+      return true;
+    }
+
+    // 备用：从 token 中解析
+    try {
+      const payload = JSON.parse(atob(token));
+      
+      // Token 过期
+      if (payload.exp && payload.exp < now) {
+        console.log('Token expired (from token), logging out...');
+        logout();
+        return false;
+      }
+      return true;
+    } catch {
+      // Token 解析失败，视为过期
+      logout();
+      return false;
+    }
+  };
+
   useEffect(() => {
+    // 初始加载时检查 Token
+    if (!checkTokenExpiry()) {
+      setLoading(false);
+      return;
+    }
+    
     fetchShareholder();
 
-    // 设置定时刷新（每5秒）和页面可见性变化时刷新
+    // 设置定时刷新（每5秒）和检查 Token 过期
     const intervalId = setInterval(() => {
+      // 先检查 Token 是否过期
+      if (!checkTokenExpiry()) {
+        return;
+      }
       fetchShareholder({ silent: true });
     }, 5000);
 

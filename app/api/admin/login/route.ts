@@ -31,12 +31,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 生成简单的 token（生产环境应该使用 JWT）
+    // 生成 token - 有效期 10 分钟
+    const TOKEN_EXPIRY_MS = 10 * 60 * 1000;
     const token = Buffer.from(
       JSON.stringify({
         username,
         role: 'admin',
-        exp: Date.now() + 24 * 60 * 60 * 1000, // 24小时有效期
+        exp: Date.now() + TOKEN_EXPIRY_MS,
       })
     ).toString('base64');
 

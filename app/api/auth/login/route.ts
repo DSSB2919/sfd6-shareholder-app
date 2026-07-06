@@ -110,11 +110,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 生成 JWT token
+    // 有效期 10 分钟（600 秒 = 600,000 毫秒）
+    const TOKEN_EXPIRY_MS = 10 * 60 * 1000;
     const token = Buffer.from(
       JSON.stringify({
         id: shareholder.id,
         phone: shareholder.phone,
-        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 天有效期
+        exp: Date.now() + TOKEN_EXPIRY_MS,
       })
     ).toString('base64');
 

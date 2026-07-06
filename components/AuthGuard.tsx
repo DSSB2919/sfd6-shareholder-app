@@ -12,17 +12,47 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check if user is authenticated
+    // Check if user is authenticated and token not expired
     const token = localStorage.getItem('token');
     const storedShareholder = localStorage.getItem('shareholder');
+    const expiryStr = localStorage.getItem('token_expiry');
     
     if (!token || !storedShareholder) {
       // Redirect to login if not authenticated
       window.location.href = '/login';
       return;
     }
+
+    // Check token expiry
+    if (expiryStr) {
+      const expiry = parseInt(expiryStr, 10);
+      if (expiry < Date.now()) {
+        // Token expired, clear and redirect
+        localStorage.removeItem('token');
+        localStorage.removeItem('shareholder');
+        localStorage.removeItem('shareholder_phone');
+        localStorage.removeItem('token_expiry');
+        window.location.href = '/login';
+        return;
+      }
+    }
     
     setIsAuthenticated(true);
+
+    // Set up interval to check token expiry every 5 seconds
+    const intervalId = setInterval(() => {
+      const expiry = localStorage.getItem('token_expiry');
+      if (expiry && parseInt(expiry, 10) < Date.now()) {
+        // Token expired
+        localStorage.removeItem('token');
+        localStorage.removeItem('shareholder');
+        localStorage.removeItem('shareholder_phone');
+        localStorage.removeItem('token_expiry');
+        window.location.href = '/login';
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   // Show loading while checking auth
