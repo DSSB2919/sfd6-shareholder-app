@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS points_transactions (
 
 -- Insert default cashier (password: cashier123)
 INSERT OR IGNORE INTO cashiers (username, password_hash, name, is_admin) 
-VALUES ('cashier', '$2a$10$YourHashedPasswordHere', 'Default Cashier', 1);
+VALUES ('cashier', 'cashier123', 'Default Cashier', 1);
 
 -- Insert sample shareholder data (password will be set via OTP)
 INSERT OR IGNORE INTO shareholders (
