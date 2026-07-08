@@ -70,11 +70,26 @@ export default function CashierDashboard() {
       return;
     }
 
+    // 先检查浏览器是否支持 getUserMedia
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError('您的浏览器不支持摄像头功能，请使用最新版 Chrome/Safari/Edge');
+      return;
+    }
+
+    // 检查是否在 HTTPS 或 localhost 环境
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      setCameraError('摄像头功能需要在 HTTPS 环境下使用');
+      return;
+    }
+
     setShowCamera(true);
     setCameraError(null);
     setScanning(true);
 
     try {
+      // 先请求摄像头权限
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      
       const qrCodeReader = new window.Html5Qrcode('qr-reader');
       setHtml5QrCode(qrCodeReader);
 
@@ -111,7 +126,19 @@ export default function CashierDashboard() {
 
     } catch (error: any) {
       console.error('Camera error:', error);
-      setCameraError(error.message || '无法启动摄像头，请检查权限设置');
+      let errorMsg = '无法启动摄像头';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMsg = '摄像头权限被拒绝，请在浏览器设置中允许摄像头访问';
+      } else if (error.name === 'NotFoundError') {
+        errorMsg = '未找到摄像头设备';
+      } else if (error.name === 'NotReadableError') {
+        errorMsg = '摄像头被其他应用占用';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      setCameraError(errorMsg);
       setScanning(false);
     }
   }, []);
@@ -456,13 +483,33 @@ export default function CashierDashboard() {
                 {cameraError ? (
                   <div className="rounded-2xl bg-red-400/10 p-6 text-center">
                     <Icon name="scan" className="mx-auto mb-3 h-12 w-12 text-red-400" />
-                    <p className="text-red-300">{cameraError}</p>
-                    <button
-                      onClick={stopCameraScan}
-                      className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
-                    >
-                      返回
-                    </button>
+                    <p className="text-red-300 font-medium">{cameraError}</p>
+                    <div className="mt-4 text-sm text-white/60 text-left space-y-2">
+                      <p className="font-medium text-white/80">解决方法：</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>确保使用最新版 Chrome/Safari/Edge 浏览器</li>
+                        <li>点击地址栏左侧的 🔒 图标，允许摄像头权限</li>
+                        <li>确保设备有摄像头且未被其他应用占用</li>
+                        <li>在手机上使用效果更佳</li>
+                      </ul>
+                    </div>
+                    <div className="mt-4 flex gap-3 justify-center">
+                      <button
+                        onClick={() => {
+                          setCameraError(null);
+                          startCameraScan();
+                        }}
+                        className="rounded-xl bg-amber-400 px-4 py-2 text-sm font-medium text-zinc-950 hover:bg-amber-300"
+                      >
+                        重试
+                      </button>
+                      <button
+                        onClick={stopCameraScan}
+                        className="rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+                      >
+                        返回
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="relative">
