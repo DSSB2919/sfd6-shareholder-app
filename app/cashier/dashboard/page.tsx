@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@/components/Icon';
 import { formatRM, calculateFoodDeduct, calculateAlcoholDeduct, getDeductPointsByTier } from '@/lib/utils';
 import { uploadReceipt, createRedemption, type RedemptionRecord } from '@/lib/supabase';
 import { decodeQRToken, validateQRToken, type QRToken } from '@/lib/qr-code';
+
+// html5-qrcode 类型定义
+declare global {
+  interface Window {
+    Html5Qrcode: any;
+  }
+}
 
 interface ScannedData {
   type: 'self' | 'family' | 'referral';
@@ -21,7 +28,7 @@ interface ScannedData {
     name: string;
     relationship: string;
   };
-  is_referral?: boolean; // 是否是带客消费
+  is_referral?: boolean;
 }
 
 export default function CashierDashboard() {
@@ -36,11 +43,96 @@ export default function CashierDashboard() {
   const [foodInput, setFoodInput] = useState('');
   const [alcoholInput, setAlcoholInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // 摄像头扫码相关状态
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [html5QrCode, setHtml5QrCode] = useState<any>(null);
+  const qrReaderRef = useRef<HTMLDivElement>(null);
+
+  // 加载 html5-qrcode 库
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.Html5Qrcode) {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('html5-qrcode loaded');
+      };
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // 开始摄像头扫码
+  const startCameraScan = useCallback(async () => {
+    if (typeof window === 'undefined' || !window.Html5Qrcode) {
+      setCameraError('扫码库加载中，请稍后再试');
+      return;
+    }
+
+    setShowCamera(true);
+    setCameraError(null);
+    setScanning(true);
+
+    try {
+      const qrCodeReader = new window.Html5Qrcode('qr-reader');
+      setHtml5QrCode(qrCodeReader);
+
+      const qrCodeSuccessCallback = (decodedText: string) => {
+        console.log('QR Code detected:', decodedText);
+        // 停止扫描
+        qrCodeReader.stop().then(() => {
+          setShowCamera(false);
+          setScanning(false);
+          // 处理扫描结果
+          processQRData(decodedText);
+        }).catch((err: any) => {
+          console.error('Failed to stop scanner:', err);
+        });
+      };
+
+      const qrCodeErrorCallback = (errorMessage: string) => {
+        // 扫码过程中的错误（如没有检测到二维码），可以忽略
+        console.log('QR scan error:', errorMessage);
+      };
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+      };
+
+      await qrCodeReader.start(
+        { facingMode: 'environment' },
+        config,
+        qrCodeSuccessCallback,
+        qrCodeErrorCallback
+      );
+
+    } catch (error: any) {
+      console.error('Camera error:', error);
+      setCameraError(error.message || '无法启动摄像头，请检查权限设置');
+      setScanning(false);
+    }
+  }, []);
+
+  // 停止摄像头扫码
+  const stopCameraScan = useCallback(async () => {
+    if (html5QrCode) {
+      try {
+        await html5QrCode.stop();
+      } catch (err) {
+        console.error('Error stopping scanner:', err);
+      }
+    }
+    setShowCamera(false);
+    setScanning(false);
+    setCameraError(null);
+  }, [html5QrCode]);
 
   // Process scanned QR code data
   const processQRData = async (qrData: string) => {
     try {
-      // Try to parse the QR data as JSON
       const token = decodeQRToken(qrData);
       
       if (!token) {
@@ -48,7 +140,6 @@ export default function CashierDashboard() {
         return false;
       }
       
-      // Validate the token
       const validation = validateQRToken(token);
       
       if (!validation.valid) {
@@ -56,7 +147,6 @@ export default function CashierDashboard() {
         return false;
       }
       
-      // Fetch shareholder data from database
       const response = await fetch(`/api/shareholder?id=${token.shareholderId}`);
       if (!response.ok) {
         alert('无法获取股东信息');
@@ -89,12 +179,10 @@ export default function CashierDashboard() {
     }
   };
 
-  // Generate a valid test QR token using the same algorithm as shareholder app
+  // 模拟扫码（用于测试）
   const handleScan = () => {
     setScanning(true);
-    // Simulate scanning delay
     setTimeout(() => {
-      // Generate a valid QR token using the generateQRToken function
       import('@/lib/qr-code').then(({ generateQRToken }) => {
         const testToken = generateQRToken(
           1,
@@ -103,20 +191,18 @@ export default function CashierDashboard() {
           'self'
         );
         
-        // Use the process function
         processQRData(JSON.stringify(testToken));
         setScanning(false);
       });
     }, 2000);
   };
 
-  // Handle manual QR input (for testing)
+  // Handle manual QR input
   const [qrInput, setQrInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(0);
   
   const handleManualSubmit = async () => {
-    // Get value directly from textarea to avoid React state sync issues
     const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
     const qrData = textarea?.value?.trim() || qrInput.trim();
     
@@ -127,7 +213,6 @@ export default function CashierDashboard() {
       return;
     }
     
-    // Parse QR token
     const token = decodeQRToken(qrData);
     console.log('Decoded token:', token);
     
@@ -136,7 +221,6 @@ export default function CashierDashboard() {
       return;
     }
     
-    // Validate token
     const validation = validateQRToken(token);
     console.log('Validation result:', validation);
     
@@ -145,7 +229,6 @@ export default function CashierDashboard() {
       return;
     }
     
-    // Fetch shareholder data
     console.log('Fetching shareholder:', token.shareholderId);
     const response = await fetch(`/api/shareholder?id=${token.shareholderId}`);
     console.log('API response status:', response.status);
@@ -158,7 +241,6 @@ export default function CashierDashboard() {
     const shareholder = await response.json();
     console.log('Shareholder data:', shareholder);
     
-    // Create scanned data object
     const newScannedData: ScannedData = {
       type: token.type,
       shareholder: {
@@ -178,28 +260,22 @@ export default function CashierDashboard() {
     
     console.log('Setting scannedData:', newScannedData);
     
-    // Reset form
     setQrInput('');
     if (textarea) textarea.value = '';
     setShowManualInput(false);
-    
-    // Set scanned data - this triggers re-render to show input mode
     setScannedData(newScannedData);
-    
-    // Force re-render
     setForceUpdate(prev => prev + 1);
     
     console.log('scannedData set, should re-render');
   };
 
-  // 根据股东等级计算抵扣（每RM100为单位）
+  // 计算抵扣
   const shareholderTier = scannedData?.shareholder.tier;
   const foodDeduct = calculateFoodDeduct(foodAmount, shareholderTier);
   const alcoholDeduct = calculateAlcoholDeduct(alcoholAmount, shareholderTier);
   const totalDeduct = foodDeduct + alcoholDeduct;
   const finalPay = foodAmount + alcoholAmount - totalDeduct;
 
-  // 获取抵扣规则用于显示
   const deductPoints = shareholderTier ? getDeductPointsByTier(shareholderTier) : { food: 25, alcohol: 10 };
 
   const handleRedeem = () => {
@@ -218,7 +294,6 @@ export default function CashierDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type and size
     if (!file.type.startsWith('image/')) {
       alert('请上传图片文件');
       return;
@@ -228,7 +303,6 @@ export default function CashierDashboard() {
       return;
     }
 
-    // Show local preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       setReceiptImage(reader.result as string);
@@ -236,7 +310,6 @@ export default function CashierDashboard() {
     reader.readAsDataURL(file);
     setReceiptFile(file);
 
-    // Upload to Supabase
     setUploading(true);
     const redemptionId = `RED_${Date.now()}`;
     const publicUrl = await uploadReceipt(file, redemptionId);
@@ -277,14 +350,12 @@ export default function CashierDashboard() {
   const confirmRedeem = async () => {
     if (!scannedData) return;
 
-    // Extract receipt path from URL
     let receiptPath: string | null = null;
     if (receiptImage) {
       const urlParts = receiptImage.split('/');
       receiptPath = `cashier/${urlParts[urlParts.length - 1]}`;
     }
 
-    // Save to database
     const redemptionData = {
       shareholder_id: scannedData.shareholder.id,
       shareholder_name: scannedData.shareholder.name,
@@ -301,7 +372,6 @@ export default function CashierDashboard() {
     const result = await createRedemption(redemptionData);
 
     if (result) {
-      // 标记本周积分已使用
       try {
         const weeklyPointsResponse = await fetch('/api/weekly-points', {
           method: 'POST',
@@ -315,11 +385,9 @@ export default function CashierDashboard() {
         if (!weeklyPointsResponse.ok) {
           const errorData = await weeklyPointsResponse.json();
           console.warn('Weekly points update warning:', errorData);
-          // 即使积分标记失败，核销仍然成功，只是记录警告
         }
       } catch (error) {
         console.error('Failed to update weekly points:', error);
-        // 不影响核销成功提示
       }
 
       alert('核销成功！');
@@ -342,7 +410,6 @@ export default function CashierDashboard() {
       <div className="relative overflow-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-amber-950 px-5 pb-6 pt-8">
         <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-amber-400/20 blur-3xl" />
         
-        {/* Back Button */}
         <div className="relative mb-4">
           <a
             href="/admin"
@@ -373,22 +440,82 @@ export default function CashierDashboard() {
         {!scannedData ? (
           /* Scan Mode */
           <div className="space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
-              <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-3xl bg-amber-400/10">
-                <Icon name="scan" className="h-16 w-16 text-amber-300" />
+            {/* 摄像头扫码区域 */}
+            {showCamera ? (
+              <div className="rounded-3xl border border-white/10 bg-black p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-white">扫描二维码</h2>
+                  <button
+                    onClick={stopCameraScan}
+                    className="rounded-xl bg-white/10 p-2 text-white hover:bg-white/20"
+                  >
+                    <Icon name="close" className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                {cameraError ? (
+                  <div className="rounded-2xl bg-red-400/10 p-6 text-center">
+                    <Icon name="scan" className="mx-auto mb-3 h-12 w-12 text-red-400" />
+                    <p className="text-red-300">{cameraError}</p>
+                    <button
+                      onClick={stopCameraScan}
+                      className="mt-4 rounded-xl bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+                    >
+                      返回
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div 
+                      id="qr-reader" 
+                      ref={qrReaderRef}
+                      className="rounded-2xl overflow-hidden"
+                      style={{ width: '100%', minHeight: '300px' }}
+                    />
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      <div className="w-48 h-48 border-2 border-amber-400/50 rounded-lg">
+                        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-amber-400" />
+                        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-amber-400" />
+                        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-amber-400" />
+                        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-amber-400" />
+                      </div>
+                    </div>
+                    <p className="mt-3 text-center text-sm text-white/60">
+                      将二维码对准框内即可自动扫描
+                    </p>
+                  </div>
+                )}
               </div>
-              <h2 className="text-xl font-bold text-white">扫描股东二维码</h2>
-              <p className="mt-2 text-sm text-white/60">
-                请让股东出示App中的消费二维码
-              </p>
-            </div>
+            ) : (
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
+                <div className="mx-auto mb-6 flex h-32 w-32 items-center justify-center rounded-3xl bg-amber-400/10">
+                  <Icon name="scan" className="h-16 w-16 text-amber-300" />
+                </div>
+                <h2 className="text-xl font-bold text-white">扫描股东二维码</h2>
+                <p className="mt-2 text-sm text-white/60">
+                  请让股东出示App中的消费二维码
+                </p>
+              </div>
+            )}
 
+            {/* 开始扫描按钮 */}
+            {!showCamera && (
+              <button
+                onClick={startCameraScan}
+                disabled={scanning}
+                className="w-full rounded-2xl bg-amber-400 py-5 text-lg font-bold text-zinc-950 transition hover:bg-amber-300 disabled:opacity-50"
+              >
+                {scanning ? '启动中...' : '开始扫描'}
+              </button>
+            )}
+
+            {/* 模拟扫码按钮（测试用） */}
             <button
               onClick={handleScan}
-              disabled={scanning}
-              className="w-full rounded-2xl bg-amber-400 py-5 text-lg font-bold text-zinc-950 transition hover:bg-amber-300 disabled:opacity-50"
+              disabled={scanning || showCamera}
+              className="w-full rounded-2xl border border-white/20 bg-transparent py-3 text-sm font-medium text-white/60 transition hover:bg-white/5"
             >
-              {scanning ? '扫描中...' : '开始扫描'}
+              {scanning ? '扫描中...' : '模拟扫码 (测试)'}
             </button>
 
             {/* Manual QR Input Toggle */}
@@ -425,6 +552,7 @@ export default function CashierDashboard() {
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <h3 className="font-bold text-white">使用说明</h3>
               <ul className="mt-3 space-y-2 text-sm text-white/60">
+                <li>• 点击"开始扫描"启动摄像头</li>
                 <li>• 股东自用码/带客码有效期为 5 分钟</li>
                 <li>• 副卡二维码有效期为 6 小时</li>
                 <li>• 每RM100可抵扣对应积分，不足部分不抵扣</li>
