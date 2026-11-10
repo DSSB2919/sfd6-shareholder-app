@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 interface AdminAuthGuardProps {
@@ -7,10 +8,19 @@ interface AdminAuthGuardProps {
 }
 
 export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/admin/login';
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 登录页必须绕过守卫，否则未登录用户会被反复重定向到当前页面。
+    if (isLoginPage) {
+      setIsAuthenticated(true);
+      setLoading(false);
+      return;
+    }
+
     // 检查管理员登录状态
     const checkAuth = () => {
       const token = localStorage.getItem('admin_token');
@@ -68,7 +78,12 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [isLoginPage]);
+
+  // 登录页不显示验证状态，直接渲染登录表单。
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   // 显示加载状态
   if (loading) {
